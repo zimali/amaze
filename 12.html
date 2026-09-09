@@ -2,948 +2,1185 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101710">
-<title>Урожайная ночь — игра</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1511">
+<title>Урожайная ночь</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101710;color:#eee6c9;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-canvas.game{display:block;width:100%;height:100%;touch-action:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1511;color:#ece5c9;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{touch-action:none;overscroll-behavior:none}
+canvas.game{position:fixed;inset:0;display:block;touch-action:none}
 button,input{font:inherit}
-button{border:1px solid #d1bc7a70;border-radius:9px;background:#d6c58d;color:#192116;padding:14px 22px;font-weight:700;cursor:pointer;transition:background .2s,transform .2s}
-button:hover{background:#eadba9;transform:translateY(-1px)}
-button:disabled{opacity:.5;cursor:wait}
-#screen,#choicesScreen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at top,#35432beb,#080f0bf5)}
-.card{width:min(610px,100%);max-height:94vh;overflow:auto;padding:34px;border:1px solid #b6bc7c30;border-radius:20px;background:#10180fe8;box-shadow:0 30px 100px #0009}
-.eyebrow{font-size:10px;letter-spacing:4px;color:#aeb88b}
+button{cursor:pointer;border:1px solid #bdcb9155;background:#cfca96;color:#162016;border-radius:10px;padding:13px 19px;font-weight:700}
+button:disabled{opacity:.45}
+button:hover{filter:brightness(1.12)}
+input[type=text]{width:100%;background:#08110c;color:#e8e1bb;border:1px solid #a8bd7940;border-radius:8px;padding:12px;user-select:text}
+input[type=range]{width:100%;accent-color:#c7ce98}
+.screen{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at top,#304531ed,#060e09f5)}
+.card{width:min(620px,100%);max-height:94dvh;overflow:auto;touch-action:pan-y;padding:30px;border:1px solid #b8c48730;border-radius:20px;background:#101b12ed;box-shadow:0 25px 100px #0009}
+.eyebrow{font-size:10px;letter-spacing:4px;color:#a8b98b}
 h1,h2{font-family:Georgia,serif;font-weight:400}
-h1{font-size:clamp(38px,6vw,60px);line-height:1.03;margin:20px 0}
-h2{font-size:34px;margin:16px 0}
-p{font-size:14px;line-height:1.8;color:#bdc5ae}
-.small{font-size:12px;color:#96a289}
-.audio{display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:center;margin-top:23px;border-top:1px solid #ffffff12;padding-top:18px;font-size:12px;color:#abb69b}
-input{width:100%;accent-color:#d6c58d}
-#status{white-space:pre-wrap;overflow-wrap:anywhere}
-#hud{position:fixed;inset:0;pointer-events:none;z-index:4;display:none;padding:22px}
-#area{font-size:23px;font-weight:700;margin:5px 0 14px}
-.panel{background:#0a130cbb;border:1px solid #ffffff14;border-radius:12px;padding:13px;backdrop-filter:blur(6px)}
-#vitals{width:205px}
-.label{font-size:10px;letter-spacing:1px;display:flex;justify-content:space-between;margin-bottom:6px;color:#c5c9ad}
-.track{height:4px;background:#ffffff19;border-radius:5px;overflow:hidden;margin-bottom:12px}
+h1{font-size:clamp(35px,7vw,60px);line-height:1.04;margin:19px 0}
+h2{font-size:32px;margin:17px 0}
+p{font-size:13px;line-height:1.75;color:#becab0}
+.small{font-size:11px;color:#8fa284;line-height:1.6}
+.options{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:center;margin:20px 0;font-size:12px;color:#aebc9b}
+#start{margin-top:16px}
+#hud{position:fixed;inset:0;z-index:3;pointer-events:none;display:none;padding:18px}
+.panel{background:#09130dcc;border:1px solid #afc48820;border-radius:12px;padding:11px;backdrop-filter:blur(4px)}
+#left{width:195px}
+#level{font-size:20px;font-weight:700;margin:5px 0 12px}
+.stat{font-size:10px;color:#c0c8a7;display:flex;justify-content:space-between;margin:7px 0 5px}
+.track{height:4px;background:#ffffff18;border-radius:5px;overflow:hidden}
 .fill{height:100%;width:100%;transition:width .15s}
-#health{background:#d1856e}
-#energy{background:#c8bc81}
-#batteryBar{background:#a6c4b3}
-#quest{position:absolute;right:22px;top:22px;width:235px}
-#questTitle{font-size:11px;letter-spacing:2px;color:#d3c28b;margin-bottom:10px}
-.ingredient{font-size:12px;color:#7f8e77;margin:8px 0}
-.ingredient.found{color:#e5dbaf}
-#objective{font-size:12px;line-height:1.6;margin-top:12px;color:#c4cbb1}
-#buffs{font-size:10px;color:#a8bc90;margin-top:12px;line-height:1.7}
-#cross{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:#fff9;transform:translate(-50%,-50%)}
-#prompt{position:absolute;left:50%;top:58%;transform:translateX(-50%);text-align:center;font-size:15px;color:#f2df9f;text-shadow:0 2px 8px black;max-width:85%}
-#message{position:absolute;left:50%;bottom:158px;transform:translateX(-50%);width:min(660px,85%);text-align:center;font-size:14px;line-height:1.6;text-shadow:0 2px 8px #000}
-#inventory{position:absolute;left:50%;bottom:54px;transform:translateX(-50%);display:flex;gap:8px}
-.slot{position:relative;width:78px;height:75px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:#111b10dd;border:1px solid #a6b18530;border-radius:10px;transition:.2s}
-.slot.selected{border-color:#d7c88c;transform:translateY(-4px);background:#36412bdd}
-.slot.empty{opacity:.45}
+#hp{background:#d48e72}#sp{background:#babc80}#bat{background:#8eb9ac}
+#buffs{font-size:10px;line-height:1.6;color:#a9c189;margin-top:10px}
+#quest{position:absolute;right:18px;top:18px;width:214px}
+#recipe{font-size:11px;line-height:1.9;color:#879b7d}
+#recipe .found{color:#e7dab0}
+#objective{font-size:11px;line-height:1.5;color:#c0cba8;margin-top:7px}
+#mapPanel{position:absolute;left:18px;bottom:76px;padding:8px}
+#map{width:145px;height:145px;display:block}
+#seedHud{font:9px monospace;color:#829776;margin-top:5px;max-width:155px;overflow:hidden}
+#cross{position:absolute;left:50%;top:50%;width:4px;height:4px;background:#fff9;border-radius:50%}
+#prompt{position:absolute;top:58%;left:50%;transform:translateX(-50%);text-align:center;font-size:13px;color:#f4df9e;width:min(80%,530px);text-shadow:0 2px 8px #000}
+#message{position:absolute;left:50%;bottom:161px;transform:translateX(-50%);width:min(75%,630px);text-align:center;font-size:13px;line-height:1.6;text-shadow:0 2px 9px #000}
+#inventory{position:absolute;left:50%;bottom:53px;transform:translateX(-50%);display:flex;gap:7px;pointer-events:auto}
+.slot{width:74px;height:70px;padding:6px;position:relative;background:#111f14e8;border:1px solid #aabd7830;color:#d5dabb;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.slot.sel{border-color:#e3d095;background:#39492ae8;transform:translateY(-4px)}
+.slot.empty{opacity:.5}
 .slot b{font-size:23px;font-weight:400}
 .slot small{font-size:9px}
-.slot em,.slot span{position:absolute;top:5px;font-size:10px;font-style:normal}
-.slot em{left:7px;color:#96a58c}
-.slot span{right:7px}
-#controls{position:absolute;bottom:19px;left:12px;right:12px;text-align:center;font-size:10px;color:#b1bea0}
-#mapPanel{position:absolute;bottom:62px;left:22px;padding:10px}
-#map{display:block;width:145px;height:145px}
-.legend{font-size:9px;color:#a5af93;text-align:center;margin-top:5px}
-#action{position:absolute;left:50%;top:67%;transform:translateX(-50%);width:220px;text-align:center;display:none;font-size:12px}
-#action .track{margin-top:9px}
-#actionFill{background:#dfc787}
-#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse,transparent 35%,#000a)}
-#damage{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse,transparent 30%,#8b2231c9);opacity:0}
-#choicesScreen{display:none}
-.choice{display:block;width:100%;text-align:left;margin-top:12px;background:#202c1b;color:#e6dfc4;padding:17px}
-.choice:hover{background:#34442b}
-.choice b{display:block;margin-bottom:5px;font-size:16px}
-.choice span{font-size:12px;line-height:1.6;color:#b8c4a9}
-#fatal{display:none;position:fixed;inset:0;z-index:100;background:#101710;padding:30px;overflow:auto}
-#fatal pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#d7bca0}
-@media(max-width:700px){
-.card{padding:24px}#hud{padding:14px}#quest{right:14px;width:185px}
-#vitals{width:155px}#mapPanel{left:14px;bottom:153px}
-#map{width:105px;height:105px}.slot{width:65px}#message{bottom:250px}
+.slot em,.slot span{position:absolute;top:5px;font-style:normal;font-size:9px}
+.slot em{left:6px}.slot span{right:6px}
+#controls{position:absolute;bottom:18px;left:12px;right:12px;text-align:center;font-size:10px;color:#acba9a}
+#progress{position:absolute;left:50%;top:67%;transform:translateX(-50%);width:200px;display:none;text-align:center;font-size:12px}
+#progress .track{margin-top:8px}
+#progressFill{background:#d6c98f}
+#pauseBtn{position:fixed;z-index:9;top:12px;left:50%;transform:translateX(-50%);display:none;padding:7px 12px;background:#15251be6;color:#dce1c6;font-size:11px}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse,transparent 25%,#000a)}
+#damage{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse,transparent 25%,#98263ac9);opacity:0}
+#choiceScreen{display:none}
+.choice{display:block;width:100%;text-align:left;background:#21331f;color:#e1dfbf;margin:11px 0}
+.choice b{display:block;margin-bottom:5px}
+.choice span{font-size:12px;line-height:1.6;color:#b1c0a1}
+#loading{display:none;z-index:60;background:#0b1511}
+#loading .card{text-align:center}
+.spinner{width:40px;height:40px;margin:22px auto;border:2px solid #b2c68420;border-top-color:#d3cf96;border-radius:50%;animation:spin 1.3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#fatal{display:none;z-index:100}
+#fatal pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#d9bfa3}
+#mobile{position:fixed;inset:0;z-index:5;pointer-events:none;display:none}
+#stick{position:absolute;left:max(20px,env(safe-area-inset-left));bottom:max(30px,env(safe-area-inset-bottom));width:126px;height:126px;border-radius:50%;background:#7a91651c;border:1px solid #c0d29844;pointer-events:auto;touch-action:none}
+#knob{position:absolute;width:48px;height:48px;left:38px;top:38px;border-radius:50%;background:#bdcca966;border:1px solid #d3dfb955;pointer-events:none}
+#touchButtons{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(25px,env(safe-area-inset-bottom));display:grid;grid-template-columns:62px 62px;gap:10px;pointer-events:auto}
+.touchBtn{width:62px;height:57px;padding:4px;border-radius:16px;background:#1b3025dc;color:#e3e1c5;border:1px solid #b9cc864c;font-size:11px;touch-action:none}
+#lookHint{position:absolute;right:26px;top:49%;font-size:10px;color:#b4c4a16b}
+body.touch #mobile.playing{display:block}
+body.touch #inventory{bottom:29px}
+body.touch #mapPanel{bottom:185px}
+body.touch #message{bottom:175px}
+body.touch #controls{display:none}
+body.touch .slot{width:56px;height:62px}
+body.touch #left{width:153px}
+body.touch #quest{width:178px}
+body.touch #map{width:112px;height:112px}
+@media(max-height:520px){
+#hud{padding:10px}#quest{right:10px;top:10px;width:175px}
+#left{width:145px}#level{font-size:15px;margin-bottom:5px}
+#buffs{display:none}
+body.touch #mapPanel{left:155px;bottom:auto;top:10px}
+body.touch #map{width:85px;height:85px}
+body.touch #seedHud{display:none}
+body.touch #message{bottom:115px;width:48%;font-size:11px}
+#quest .eyebrow{font-size:8px}#recipe{font-size:10px;line-height:1.65}
 }
 </style>
 </head>
 <body>
-
-<div id="vignette"></div>
-<div id="damage"></div>
-
+<div id="vignette"></div><div id="damage"></div>
 <div id="hud">
- <div class="eyebrow">УРОЖАЙНАЯ НОЧЬ</div>
- <div id="area">Участок 1 / 5</div>
- <div id="vitals" class="panel">
-  <div class="label">Здоровье <span id="hpText">100</span></div>
-  <div class="track"><div id="health" class="fill"></div></div>
-  <div class="label">Выносливость</div>
-  <div class="track"><div id="energy" class="fill"></div></div>
-  <div class="label">Фонарик <span id="batteryText">100%</span></div>
-  <div class="track"><div id="batteryBar" class="fill"></div></div>
-  <div id="buffs">Зелья ещё не сварены</div>
+ <div id="left" class="panel">
+  <div class="eyebrow">УРОЖАЙНАЯ НОЧЬ</div>
+  <div id="level"></div>
+  <div class="stat">Здоровье <span id="hpText"></span></div>
+  <div class="track"><div id="hp" class="fill"></div></div>
+  <div class="stat">Выносливость</div>
+  <div class="track"><div id="sp" class="fill"></div></div>
+  <div class="stat">Фонарик <span id="batText"></span></div>
+  <div class="track"><div id="bat" class="fill"></div></div>
+  <div id="buffs"></div>
  </div>
  <div id="quest" class="panel">
-  <div id="questTitle">РЕЦЕПТ НОЧНОГО ЗЕЛЬЯ</div>
-  <div id="ingredients"></div>
-  <div id="objective"></div>
+  <div class="eyebrow">НОЧНОЙ РЕЦЕПТ</div>
+  <div id="recipe"></div><div id="objective"></div>
  </div>
  <div id="mapPanel" class="panel">
   <canvas id="map" width="240" height="240"></canvas>
-  <div class="legend">◆ котёл · ● ингредиенты</div>
+  <div id="seedHud"></div>
  </div>
- <div id="cross"></div>
- <div id="prompt"></div>
- <div id="message"></div>
- <div id="action"><span id="actionText"></span><div class="track"><div id="actionFill" class="fill"></div></div></div>
+ <div id="cross"></div><div id="prompt"></div><div id="message"></div>
  <div id="inventory"></div>
- <div id="controls">WASD — идти · Shift — бег · E — котёл · 1–4 — предмет · Q — использовать · F — свет · Esc — пауза</div>
+ <div id="progress"><span id="progressText"></span><div class="track"><div id="progressFill" class="fill"></div></div></div>
+ <div id="controls">WASD · Shift — бег · E — котёл · Q — предмет · 1–4 — слот · F — свет · Esc — пауза</div>
 </div>
-
-<div id="screen">
+<button id="pauseBtn">Ⅱ Пауза</button>
+<div id="mobile">
+ <div id="stick"><div id="knob"></div></div>
+ <div id="lookHint">Проведи пальцем для обзора</div>
+ <div id="touchButtons">
+  <button class="touchBtn" id="runBtn">Бег<br>удерживать</button>
+  <button class="touchBtn" id="lightBtn">Свет</button>
+  <button class="touchBtn" id="useBtn">Предмет</button>
+  <button class="touchBtn" id="interactBtn">Котёл<br>E</button>
+ </div>
+</div>
+<div id="menu" class="screen">
  <div class="card">
-  <div class="eyebrow">3D · ФЕРМА · РОГАЛИК</div>
+  <div class="eyebrow">ФЕРМА · ИССЛЕДОВАНИЕ · РОГАЛИК</div>
   <h1 id="title">УРОЖАЙНАЯ<br>НОЧЬ</h1>
   <div id="description">
-   <p>Собери <b>два редких цветка и два гриба</b>. Вернись к котлу в центре карты, нажми <b>E</b> и свари зелье.</p>
-   <p>Выбранный эффект останется с тобой до конца забега. Впереди пять лабиринтов, и с каждым ферма становится опаснее.</p>
-   <p><b>Соломенник</b> замирает под взглядом. <b>Пыльцеглот</b> атакует движущихся рядом. У котла безопасно.</p>
-   <p class="small">Для компьютера с клавиатурой и мышью. Без захвата мыши удерживай левую кнопку для обзора.</p>
+   <p>Исследуй кукурузный лабиринт, найди <b>два цветка и два гриба</b>. Вернись к безопасному котлу в центре и свари зелье.</p>
+   <p>Каждое зелье усиливает тебя до конца забега. Пройди пять участков и встреть рассвет.</p>
+   <p><b>Соломенник</b> замирает, когда ты видишь его в свете.<br>
+   <b>Шорох</b> слышит шаги — особенно бег.<br>
+   <b>Ночница</b> отступает перед лучом фонарика.</p>
   </div>
-  <button id="start" disabled>Загрузка…</button>
-  <div class="audio">
-   <label for="music">Музыка</label><input id="music" type="range" min="0" max="100" value="35">
-   <label for="effects">Эффекты</label><input id="effects" type="range" min="0" max="100" value="60">
+  <div id="seedOptions">
+   <label class="small" for="seed">Сид забега · оставь пустым для нового мира</label>
+   <input id="seed" type="text" maxlength="48" placeholder="Например: harvest-2026" autocomplete="off">
   </div>
-  <p id="status" class="small">Загружается 3D-библиотека…</p>
+  <button id="start" disabled>Загрузка библиотеки…</button>
+  <div class="options">
+   <label for="musicVolume">Музыка</label><input id="musicVolume" type="range" min="0" max="100" value="35">
+   <label for="fxVolume">Звуки</label><input id="fxVolume" type="range" min="0" max="100" value="65">
+  </div>
+  <p id="deviceInfo" class="small"></p>
+  <p id="status" class="small">Подготавливаем игру…</p>
  </div>
 </div>
-
-<div id="choicesScreen">
+<div id="choiceScreen" class="screen">
  <div class="card">
-  <div class="eyebrow">НОЧНОЙ УРОЖАЙ СОБРАН</div>
-  <h2 id="choiceTitle">Зелье готово</h2>
-  <p id="choiceInfo"></p>
+  <div class="eyebrow">УРОЖАЙ СОБРАН</div><h2>Выбери зелье</h2>
+  <p>Эффект сохранится на следующих участках и складывается с предыдущими выборами.</p>
   <div id="choices"></div>
  </div>
 </div>
-
-<div id="fatal">
- <h2>Не удалось запустить игру</h2>
- <p>Проверь интернет, поддержку WebGL и разрешения браузера. Попробуй Chrome, Edge или Firefox на компьютере.</p>
- <pre id="errorText"></pre>
- <button onclick="location.reload()">Попробовать снова</button>
-</div>
-
-<noscript>
- <div style="position:fixed;inset:0;z-index:200;background:#101710;padding:40px">
-  Для запуска игры включи JavaScript в браузере.
+<div id="loading" class="screen">
+ <div class="card">
+  <div class="eyebrow">ФЕРМА МЕНЯЕТ ТРОПЫ</div>
+  <div class="spinner"></div><h2 id="loadingTitle">Прорастает кукуруза…</h2>
+  <p id="loadingText"></p>
  </div>
-</noscript>
-
+</div>
+<div id="fatal" class="screen">
+ <div class="card"><h2>Не удалось запустить игру</h2><p>Проверь интернет, WebGL и разрешения браузера.</p><pre id="error"></pre><button onclick="location.reload()">Обновить</button></div>
+</div>
+<noscript>Для игры необходимо включить JavaScript.</noscript>
 <script type="module">
-const $ = id => document.getElementById(id);
-let fatalShown = false;
-
-function fatal(error) {
- if (fatalShown) return;
- fatalShown = true;
- console.error(error);
- $('fatal').style.display = 'block';
- $('errorText').textContent = String(error?.stack || error);
+const $=id=>document.getElementById(id);
+let failed=false;
+function fatal(e){
+ if(failed)return;
+ failed=true;console.error(e);
+ $('fatal').style.display='grid';
+ $('error').textContent=String(e?.stack||e);
 }
-
-async function importThree() {
- const sources = [
+async function library(){
+ for(const host of [
   'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
   'https://unpkg.com/three@0.160.0/build/three.module.js'
- ];
- for (const source of sources) {
-  try {
-   return await Promise.race([
-    import(source),
-    new Promise((_, reject) =>
-     setTimeout(() => reject(new Error('Время загрузки истекло')), 12000))
-   ]);
-  } catch (error) {
-   console.warn('Не удалось загрузить:', source, error);
-  }
+ ]){
+  try{return await Promise.race([
+   import(host),
+   new Promise((_,reject)=>setTimeout(()=>reject(Error('Тайм-аут CDN')),12000))
+  ])}catch(e){console.warn(e)}
  }
- throw new Error('Не удалось загрузить Three.js. CDN может блокироваться расширением или сетью.');
+ throw Error('Не удалось загрузить Three.js. Возможно, CDN заблокирован сетью.');
 }
+try{
+const THREE=await library();
 
-try {
-const THREE = await importThree();
+// Гибридные устройства могут переключиться на сенсорное управление
+// после первого касания.
+let touchMode=matchMedia('(pointer:coarse)').matches||
+ (navigator.maxTouchPoints>0&&matchMedia('(hover:none)').matches);
+function deviceUI(){
+ document.body.classList.toggle('touch',touchMode);
+ $('deviceInfo').textContent=touchMode
+ ?'Сенсорное управление: слева джойстик, справа обзор пальцем. Удобнее играть горизонтально.'
+ :'Клавиатура и мышь. Если захват мыши недоступен, удерживай левую кнопку для обзора.';
+}
+deviceUI();
 
-const SIZE=9, CELL=4.5, TOTAL=5, CENTER=40, RADIUS=.28;
-const ingredientNames=['Туманный цветок','Лунный гриб','Огненный мак','Изумрудный сморчок'];
-const ingredientColors=[0xaedaff,0xffdf97,0xf99376,0x93d995];
+const N=9,C=4.6,TOTAL=5,CENTER=40;
+const names=['Туманный цветок','Лунный гриб','Огненный мак','Изумрудный сморчок'];
+const colors=[0xaddaff,0xf0d494,0xf49578,0x85d9a2];
 const itemNames=['Бинт','Батарейка','Спички','Колокол'];
-const itemIcons=['✚','▥','♨','♧'];
+const icons=['✚','▥','♨','♧'];
 
+function hash(text){
+ let h=2166136261;
+ for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}
+ return h>>>0;
+}
+function generator(seed){
+ let a=seed>>>0;
+ return ()=>{
+  a+=0x6D2B79F5;
+  let t=a;t=Math.imul(t^(t>>>15),t|1);
+  t^=t+Math.imul(t^(t>>>7),t|61);
+  return ((t^(t>>>14))>>>0)/4294967296;
+ };
+}
+function randomSeed(){
+ const a=new Uint32Array(2);crypto.getRandomValues(a);
+ return a[0].toString(36)+'-'+a[1].toString(36);
+}
+let rng=generator(1),runSeed='',stageSeed='';
+function shuffle(array){
+ for(let i=array.length-1;i>0;i--){
+  const j=Math.floor(rng()*(i+1));[array[i],array[j]]=[array[j],array[i]];
+ }
+ return array;
+}
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x17241e);
-scene.fog=new THREE.FogExp2(0x17241e,.039);
-const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.07,130);
-camera.rotation.order='YXZ';
-scene.add(camera);
-
-const renderer=new THREE.WebGLRenderer({antialias:true});
+scene.background=new THREE.Color(0x101c18);
+scene.fog=new THREE.FogExp2(0x101c18,.047);
+const camera=new THREE.PerspectiveCamera(74,innerWidth/innerHeight,.08,110);
+camera.rotation.order='YXZ';scene.add(camera);
+const renderer=new THREE.WebGLRenderer({antialias:!touchMode,powerPreference:'high-performance'});
 renderer.domElement.className='game';
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));
+renderer.setPixelRatio(Math.min(devicePixelRatio,touchMode?1.25:1.65));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 document.body.prepend(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xb0c9cc,0x494026,1.2));
-const moonLight=new THREE.DirectionalLight(0xa3bccc,1.1);
-moonLight.position.set(-20,30,-10);
-scene.add(moonLight);
+scene.add(new THREE.HemisphereLight(0x849aa2,0x252718,.32));
+const moonLight=new THREE.DirectionalLight(0x9bb1bb,.36);
+moonLight.position.set(-25,40,-20);scene.add(moonLight);
+const torch=new THREE.SpotLight(0xffdda5,42,27,.57,.65,1.45);
+torch.position.set(.17,-.12,0);torch.target.position.set(0,0,-10);
+camera.add(torch,torch.target);
+const matchLight=new THREE.PointLight(0xffad60,0,8,1.6);
+matchLight.position.set(-.2,-.1,-.4);camera.add(matchLight);
 
-const flashlight=new THREE.SpotLight(0xffdfa8,32,25,.61,.7,1.4);
-flashlight.position.set(.2,-.18,-.1);
-flashlight.target.position.set(0,0,-10);
-camera.add(flashlight,flashlight.target);
-const personalLight=new THREE.PointLight(0xffd6a1,1,5,1.5);
-camera.add(personalLight);
-const matchLight=new THREE.PointLight(0xffaa50,0,9,1.5);
-camera.add(matchLight);
-
-const geometry={
+const geo={
  box:new THREE.BoxGeometry(1,1,1),
- ball:new THREE.SphereGeometry(1,10,8),
- cyl:new THREE.CylinderGeometry(1,1,1,7),
- cone:new THREE.ConeGeometry(1,1,6),
- bowl:new THREE.SphereGeometry(1,16,12,0,Math.PI*2,Math.PI/2,Math.PI/2),
- ring:new THREE.TorusGeometry(1,.09,6,20)
+ ball:new THREE.SphereGeometry(1,8,6),
+ cyl:new THREE.CylinderGeometry(1,1,1,6),
+ cone:new THREE.ConeGeometry(1,1,5),
+ ring:new THREE.TorusGeometry(1,.07,6,16),
+ bowl:new THREE.SphereGeometry(1,14,10,0,Math.PI*2,Math.PI/2,Math.PI/2),
+ leaf:new THREE.PlaneGeometry(1,1)
 };
-const mat=(color,extra={})=>new THREE.MeshStandardMaterial({color,roughness:.9,...extra});
-const materials={
- ground:mat(0x49402a),hedge:mat(0x3b4a25),stalk:mat(0x7a8541),
- leaf:mat(0x657737),corn:mat(0xc4a75d),wood:mat(0x755537),
- dark:mat(0x252821),cloth:mat(0x645039),straw:mat(0xb99e63),
- skin:mat(0xa98662),sleeve:mat(0x40523c),
- eye:mat(0xff962b,{emissive:0xff510d,emissiveIntensity:3}),
- purple:mat(0xa349bc,{emissive:0x721080,emissiveIntensity:.5}),
- petal:mat(0xd6baaa),stone:mat(0x666b58),
- light:mat(0xffd599,{emissive:0xffaa44,emissiveIntensity:2}),
- liquid:mat(0x6aaf77,{emissive:0x388854,emissiveIntensity:.7}),
- bandage:mat(0xdcd1b5),battery:mat(0x91b3bc),
- matches:mat(0xba734a),bell:mat(0xcbb05c,{metalness:.5}),
- ingredients:ingredientColors.map(c=>mat(c,{emissive:c,emissiveIntensity:.35}))
+const material=(c,x={})=>new THREE.MeshStandardMaterial({color:c,roughness:.95,...x});
+const mat={
+ ground:material(0x413725),hedge:material(0x293b19),
+ stalk:material(0x68763c),leaf:material(0x657c37,{side:THREE.DoubleSide}),
+ corn:material(0xc1a454),wood:material(0x675035),
+ cloth:material(0x69523a),straw:material(0xad955d),dark:material(0x20251c),
+ stone:material(0x55634b),skin:material(0xa18460),sleeve:material(0x3e513a),
+ bandage:material(0xd6cdb0),battery:material(0x8eacae),
+ matches:material(0xb47448),bell:material(0xbfa154,{metalness:.5}),
+ purple:material(0x8b429e,{emissive:0x5b196b,emissiveIntensity:.3}),
+ eye:material(0xff9657,{emissive:0xff6533,emissiveIntensity:2}),
+ glow:material(0xffd6a0,{emissive:0xffb756,emissiveIntensity:2}),
+ liquid:material(0x5b9770,{emissive:0x38774c,emissiveIntensity:.7}),
+ moth:material(0x8fa499),petal:material(0xc6ba92),
+ ingredient:colors.map(c=>material(c,{emissive:c,emissiveIntensity:.35}))
 };
-
 let world=new THREE.Group();scene.add(world);
-function mesh(shape,material,x,y,z,sx=1,sy=1,sz=1,parent=world){
- const object=new THREE.Mesh(shape,material);
- object.position.set(x,y,z);object.scale.set(sx,sy,sz);parent.add(object);
- return object;
+function mesh(g,m,x,y,z,sx=1,sy=1,sz=1,parent=world){
+ const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o;
 }
-mesh(geometry.ball,materials.light,-22,34,-30,2.4,2.4,2.4,scene);
+mesh(geo.ball,mat.glow,-25,36,-35,2.5,2.5,2.5,scene);
 
-let state='menu',level=1,time=0;
-let hp=100,energy=100,battery=100,inventory=[2,2,2,1],selected=0;
-let buffs={light:0,pollen:0,speed:0};
-let found=[false,false,false,false],maze=[],walls=[],plants=[],supplies=[],hazards=[];
-let enemy=null,enemyPosition=new THREE.Vector3(),enemyNode=0,enemyNext=null;
-let kettle=null,liquid=null,kettleLight=null;
+let state='menu',level=1,time=0,hp=100,energy=100,battery=100;
+let inventory=[2,2,2,1],selected=0,buffs={light:0,skin:0,step:0};
+let maze=[],walls=[],plants=[],items=[],hazards=[],enemies=[],explored=[];
+let found=[false,false,false,false],kettle,liquid,kettleLight;
+let action=null,lightOn=true,matchEnd=0,freezeEnd=0,lastDamage=-100;
 let yaw=0,pitch=0,targetYaw=0,targetPitch=0;
-let lightOn=true,matchEnd=0,freezeEnd=0,enemyHit=-100,lastDamage=-100;
-let action=null,walk=0,handDip=0,flash=0;
-let messageEnd=0,nextStep=0,nextRustle=8,mapTimer=0;
-let exhausted=false,dragging=false,lastPointerX=0,lastPointerY=0;
-let keys={},lastInventory='';
-const player=new THREE.Vector3();
-const view=new THREE.Vector3();
-const cell=id=>new THREE.Vector3((id%SIZE+.5)*CELL,0,(Math.floor(id/SIZE)+.5)*CELL);
+let walk=0,bob=0,handDip=0,damageFlash=0,exhausted=false;
+let nextStep=0,nextRustle=6,nextHeartbeat=0,nextBreath=0,messageEnd=0,mapTime=0;
+let invSignature='',keys={},joy={x:0,y:0},sprintTouch=false;
+let lookPointer=null,lookX=0,lookY=0,stickPointer=null;
+let loadingToken=0;
+const player=new THREE.Vector3(),view=new THREE.Vector3();
+const cell=id=>new THREE.Vector3((id%N+.5)*C,0,(Math.floor(id/N)+.5)*C);
+const central=id=>{
+ const x=id%N,z=Math.floor(id/N);return x>=3&&x<=5&&z>=3&&z<=5;
+};
+const cellId=p=>THREE.MathUtils.clamp(Math.floor(p.x/C),0,N-1)+N*THREE.MathUtils.clamp(Math.floor(p.z/C),0,N-1);
+function say(text,d=5){$('message').textContent=text;messageEnd=time+d}
 
-function message(text,duration=5){
- $('message').textContent=text;messageEnd=time+duration;
-}
-
-// Аудио использует собственные часы AudioContext.
-// При смене уровня музыка не пересоздаётся и не сбрасывается.
-let audio=null,master=null,fx=null,music=null;
-let noiseBuffer=null,voices=[],musicTimer=null,musicTick=0;
+// -------------------- Аудио --------------------
+// Один AudioContext на всю сессию. Не создаётся заново при генерации.
+// Планировщик работает по audio.currentTime, а не по игровому времени.
+let audio,master,fxBus,musicBus,noiseBuffer,musicTimer;
+let pads=[],nextMusic=0,musicBeat=0;
 function volumes(){
  if(!audio)return;
- const now=audio.currentTime;
- fx.gain.setTargetAtTime(+$('effects').value/100,now,.15);
- music.gain.setTargetAtTime(+$('music').value/100,now,.3);
- master.gain.setTargetAtTime(state==='playing'?.8:.3,now,.5);
+ const t=audio.currentTime;
+ fxBus.gain.setTargetAtTime(+$('fxVolume').value/100,t,.15);
+ musicBus.gain.setTargetAtTime(+$('musicVolume').value/100,t,.4);
+ master.gain.setTargetAtTime(state==='playing'?.8:.32,t,.5);
 }
-function tone(frequency,duration=.3,volume=.05,type='sine',bus=null,pan=0){
+function tone(f,d=.3,v=.04,type='sine',bus=null,pan=0,when=null){
  if(!audio||audio.state!=='running')return;
- const t=audio.currentTime,o=audio.createOscillator(),g=audio.createGain();
- const p=audio.createStereoPanner();
- o.type=type;o.frequency.value=frequency;p.pan.value=pan;
+ const t=Math.max(audio.currentTime,when??audio.currentTime);
+ const o=audio.createOscillator(),g=audio.createGain(),p=audio.createStereoPanner();
+ o.type=type;o.frequency.value=f;p.pan.value=pan;
  g.gain.setValueAtTime(.0001,t);
- g.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),t+Math.min(.04,duration*.2));
- g.gain.exponentialRampToValueAtTime(.0001,t+duration);
- o.connect(g).connect(p).connect(bus||fx);o.start(t);o.stop(t+duration+.05);
+ g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+Math.min(.12,d*.2));
+ g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ o.connect(g).connect(p).connect(bus||fxBus);o.start(t);o.stop(t+d+.05);
  o.onended=()=>{o.disconnect();g.disconnect();p.disconnect()};
 }
-function rustle(duration=.3,volume=.08,frequency=1300,pan=0){
+function noise(d=.3,v=.07,f=1300,pan=0){
  if(!audio||audio.state!=='running')return;
- const t=audio.currentTime,s=audio.createBufferSource(),f=audio.createBiquadFilter();
- const g=audio.createGain(),p=audio.createStereoPanner();
- s.buffer=noiseBuffer;f.type='bandpass';f.frequency.value=frequency;p.pan.value=pan;
- g.gain.setValueAtTime(.0001,t);
- g.gain.exponentialRampToValueAtTime(volume,t+duration*.15);
- g.gain.exponentialRampToValueAtTime(.0001,t+duration);
- s.connect(f).connect(g).connect(p).connect(fx);
- s.start(t,Math.random());s.stop(t+duration+.05);
- s.onended=()=>{s.disconnect();f.disconnect();g.disconnect();p.disconnect()};
+ const t=audio.currentTime,s=audio.createBufferSource(),g=audio.createGain();
+ const filter=audio.createBiquadFilter(),p=audio.createStereoPanner();
+ s.buffer=noiseBuffer;filter.type='bandpass';filter.frequency.value=f;p.pan.value=pan;
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+d*.2);
+ g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ s.connect(filter).connect(g).connect(p).connect(fxBus);s.start(t,.5);s.stop(t+d+.03);
+ s.onended=()=>{s.disconnect();filter.disconnect();g.disconnect();p.disconnect()};
 }
 function initAudio(){
  if(audio){audio.resume().catch(()=>{});return}
- const AC=window.AudioContext||window.webkitAudioContext;
- if(!AC)return;
- audio=new AC();master=audio.createGain();fx=audio.createGain();music=audio.createGain();
- const limiter=audio.createDynamicsCompressor();
- master.connect(limiter);limiter.connect(audio.destination);
- fx.connect(master);music.connect(master);
- noiseBuffer=audio.createBuffer(1,audio.sampleRate*3,audio.sampleRate);
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ audio=new AC();master=audio.createGain();fxBus=audio.createGain();musicBus=audio.createGain();
+ const compressor=audio.createDynamicsCompressor();
+ compressor.threshold.value=-14;compressor.ratio.value=4;
+ master.connect(compressor);compressor.connect(audio.destination);
+ fxBus.connect(master);musicBus.connect(master);
+ noiseBuffer=audio.createBuffer(1,audio.sampleRate*4,audio.sampleRate);
  const data=noiseBuffer.getChannelData(0);let last=0;
- for(let i=0;i<data.length;i++){
-  last=(last+(Math.random()*2-1)*.07)/1.025;data[i]=last*3;
- }
- const wind=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();
- wind.buffer=noiseBuffer;wind.loop=true;filter.type='lowpass';filter.frequency.value=500;
- gain.gain.value=.10;wind.connect(filter).connect(gain).connect(fx);wind.start();
- [55,82.41,130.81].forEach((frequency,i)=>{
-  const oscillator=audio.createOscillator(),g=audio.createGain();
-  oscillator.type=i?'triangle':'sine';oscillator.frequency.value=frequency;
-  g.gain.value=[.035,.009,.005][i];
-  oscillator.connect(g).connect(music);oscillator.start();voices.push(oscillator);
+ for(let i=0;i<data.length;i++){last=(last+(Math.random()*2-1)*.06)/1.03;data[i]=last*3}
+ const wind=audio.createBufferSource(),wf=audio.createBiquadFilter(),wg=audio.createGain();
+ wind.buffer=noiseBuffer;wind.loop=true;wf.type='lowpass';wf.frequency.value=450;wg.gain.value=.085;
+ wind.connect(wf).connect(wg).connect(fxBus);wind.start();
+ [55,82.41,130.81].forEach((f,i)=>{
+  const o=audio.createOscillator(),g=audio.createGain(),filter=audio.createBiquadFilter();
+  o.type=i?'triangle':'sine';o.frequency.value=f;
+  filter.type='lowpass';filter.frequency.value=350;
+  g.gain.value=[.035,.015,.008][i];
+  o.connect(filter).connect(g).connect(musicBus);o.start();pads.push(o);
  });
- const chords=[[55,82.41,130.81],[49,73.42,116.54],[43.65,65.41,110],[55,87.31,130.81]];
- const notes=[220,261.63,329.63,293.66,261.63,196,220,329.63];
+ nextMusic=audio.currentTime+.2;
+ const chords=[[55,82.41,130.81],[49,73.42,123.47],[43.65,65.41,110],[55,82.41,130.81]];
+ const melody=[220,261.63,329.63,293.66,261.63,196,220,329.63];
  musicTimer=setInterval(()=>{
   if(audio.state!=='running')return;
   const now=audio.currentTime;
-  if(musicTick%4===0){
-   const chord=chords[Math.floor(musicTick/4)%chords.length];
-   voices.forEach((v,i)=>v.frequency.setTargetAtTime(chord[i],now,2.8));
+  // После сильного throttling не проигрываем накопившиеся ноты разом.
+  if(nextMusic<now-.5)nextMusic=now+.08;
+  while(nextMusic<now+.25){
+   if(musicBeat%4===0){
+    const chord=chords[Math.floor(musicBeat/4)%4];
+    pads.forEach((o,i)=>o.frequency.setTargetAtTime(chord[i],nextMusic,2.5));
+   }
+   tone(melody[musicBeat%8],3.6,.022,'sine',musicBus,Math.sin(musicBeat)*.4,nextMusic);
+   musicBeat++;nextMusic+=4;
   }
-  tone(notes[musicTick%notes.length],3.8,.022,'sine',music,Math.sin(musicTick)*.5);
-  musicTick++;
- },4000);
- audio.resume().catch(()=>{});
- volumes();
+ },100);
+ audio.resume().catch(()=>{});volumes();
 }
-$('music').oninput=volumes;$('effects').oninput=volumes;
+$('musicVolume').oninput=volumes;$('fxVolume').oninput=volumes;
 
-// Генерация связного лабиринта с безопасной центральной поляной.
-function makeMaze(){
- const grid=Array.from({length:SIZE*SIZE},()=>({visited:false,links:[]}));
- function connect(a,b){
+// -------------------- Лабиринт --------------------
+function generateMaze(){
+ const grid=Array.from({length:N*N},()=>({seen:false,links:[]}));
+ const connect=(a,b)=>{
   if(!grid[a].links.includes(b))grid[a].links.push(b);
   if(!grid[b].links.includes(a))grid[b].links.push(a);
- }
- const stack=[CENTER];grid[CENTER].visited=true;
+ };
+ const stack=[CENTER];grid[CENTER].seen=true;
  while(stack.length){
-  const id=stack[stack.length-1],x=id%SIZE,z=Math.floor(id/SIZE),options=[];
+  const id=stack[stack.length-1],x=id%N,z=Math.floor(id/N),options=[];
   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
    const nx=x+dx,nz=z+dz;
-   if(nx>=0&&nz>=0&&nx<SIZE&&nz<SIZE&&!grid[nz*SIZE+nx].visited)
-    options.push(nz*SIZE+nx);
+   if(nx>=0&&nz>=0&&nx<N&&nz<N&&!grid[nz*N+nx].seen)options.push(nz*N+nx);
   }
   if(!options.length){stack.pop();continue}
-  const next=options[Math.floor(Math.random()*options.length)];
-  connect(id,next);grid[next].visited=true;stack.push(next);
+  const next=options[Math.floor(rng()*options.length)];
+  connect(id,next);grid[next].seen=true;stack.push(next);
  }
  for(let z=3;z<=5;z++)for(let x=3;x<=5;x++){
-  const id=z*SIZE+x;
-  if(x<5)connect(id,id+1);
-  if(z<5)connect(id,id+SIZE);
+  const id=z*N+x;if(x<5)connect(id,id+1);if(z<5)connect(id,id+N);
+ }
+ // Немного петель: обходные маршруты для игрока и охотников.
+ for(let i=0;i<9;i++){
+  const x=Math.floor(rng()*(N-1)),z=Math.floor(rng()*(N-1)),id=z*N+x;
+  connect(id,rng()<.5?id+1:id+N);
  }
  return grid;
 }
-function central(id){
- const x=id%SIZE,z=Math.floor(id/SIZE);
- return x>=3&&x<=5&&z>=3&&z<=5;
-}
-function getCell(p){
- return THREE.MathUtils.clamp(Math.floor(p.x/CELL),0,SIZE-1)+
- SIZE*THREE.MathUtils.clamp(Math.floor(p.z/CELL),0,SIZE-1);
-}
-function nextPath(start,end){
- if(start===end)return end;
+function route(start,end,avoidCenter=false){
+ if(start===end)return [];
  const queue=[start],prev=new Map([[start,-1]]);
  for(let i=0;i<queue.length;i++){
   const id=queue[i];if(id===end)break;
-  for(const n of maze[id].links)if(!prev.has(n)){prev.set(n,id);queue.push(n)}
+  for(const next of maze[id].links){
+   if(avoidCenter&&central(next))continue;
+   if(!prev.has(next)){prev.set(next,id);queue.push(next)}
+  }
  }
- let n=end;
- while(prev.has(n)&&prev.get(n)!==start&&prev.get(n)!==-1)n=prev.get(n);
- return n;
+ if(!prev.has(end))return [];
+ const result=[];let id=end;
+ while(id!==start){result.unshift(id);id=prev.get(id)}
+ return result;
 }
-function wall(x,z,sx,sz){walls.push({a:x-sx/2,b:x+sx/2,c:z-sz/2,d:z+sz/2})}
-function blocked(x,z){
- if(Math.hypot(x-kettle.position.x,z-kettle.position.z)<1.05)return true;
- return walls.some(w=>x+RADIUS>w.a&&x-RADIUS<w.b&&z+RADIUS>w.c&&z-RADIUS<w.d);
-}
+function addWall(x,z,sx,sz){walls.push({a:x-sx/2,b:x+sx/2,c:z-sz/2,d:z+sz/2})}
 function clearLine(a,b){
  for(const w of walls){
-  let low=0,high=1,miss=false;
-  for(const [origin,delta,min,max] of [[a.x,b.x-a.x,w.a,w.b],[a.z,b.z-a.z,w.c,w.d]]){
-   if(Math.abs(delta)<.00001){if(origin<min||origin>max){miss=true;break}}
+  let lo=0,hi=1,miss=false;
+  for(const [o,d,min,max] of [[a.x,b.x-a.x,w.a,w.b],[a.z,b.z-a.z,w.c,w.d]]){
+   if(Math.abs(d)<.00001){if(o<min||o>max){miss=true;break}}
    else{
-    let t1=(min-origin)/delta,t2=(max-origin)/delta;
-    if(t1>t2)[t1,t2]=[t2,t1];
-    low=Math.max(low,t1);high=Math.min(high,t2);
-    if(low>high){miss=true;break}
+    let t1=(min-o)/d,t2=(max-o)/d;if(t1>t2)[t1,t2]=[t2,t1];
+    lo=Math.max(lo,t1);hi=Math.min(hi,t2);
+    if(lo>hi){miss=true;break}
    }
   }
   if(!miss)return false;
  }
  return true;
 }
+function blocked(x,z){
+ if(Math.hypot(x-kettle.position.x,z-kettle.position.z)<1.02)return true;
+ return walls.some(w=>x+.28>w.a&&x-.28<w.b&&z+.28>w.c&&z-.28<w.d);
+}
 function buildCorn(){
  const dummy=new THREE.Object3D(),points=[];
- const hedges=new THREE.InstancedMesh(geometry.box,materials.hedge,walls.length);
+ const hedges=new THREE.InstancedMesh(geo.box,mat.hedge,walls.length);
  walls.forEach((w,i)=>{
-  dummy.position.set((w.a+w.b)/2,1.15,(w.c+w.d)/2);
-  dummy.rotation.set(0,0,0);dummy.scale.set(w.b-w.a,2.3,w.d-w.c);
+  dummy.position.set((w.a+w.b)/2,1.08,(w.c+w.d)/2);
+  dummy.rotation.set(0,0,0);dummy.scale.set(w.b-w.a,2.16,w.d-w.c);
   dummy.updateMatrix();hedges.setMatrixAt(i,dummy.matrix);
   const horizontal=w.b-w.a>w.d-w.c,length=horizontal?w.b-w.a:w.d-w.c;
-  const count=Math.ceil(length/.55);
-  for(let n=0;n<count;n++){
-   const t=(n+.5)/count;
-   points.push({x:horizontal?w.a+length*t:(w.a+w.b)/2,
-    z:horizontal?(w.c+w.d)/2:w.c+length*t,h:2.7+Math.random()*.6});
+  const count=Math.ceil(length/.57);
+  for(let j=0;j<count;j++){
+   const t=(j+.5)/count;
+   points.push({x:(horizontal?w.a+length*t:(w.a+w.b)/2)+(rng()-.5)*.23,
+    z:(horizontal?(w.c+w.d)/2:w.c+length*t)+(rng()-.5)*.23,
+    h:2.5+rng()*.9,angle:rng()*Math.PI*2});
   }
  });
- const stalks=new THREE.InstancedMesh(geometry.cyl,materials.stalk,points.length);
- const tops=new THREE.InstancedMesh(geometry.cone,materials.corn,points.length);
- const leaves=new THREE.InstancedMesh(geometry.cone,materials.leaf,points.length);
+ const stalks=new THREE.InstancedMesh(geo.cyl,mat.stalk,points.length);
+ const ears=new THREE.InstancedMesh(geo.ball,mat.corn,points.length);
+ const tops=new THREE.InstancedMesh(geo.cone,mat.corn,points.length);
+ const leaves=new THREE.InstancedMesh(geo.leaf,mat.leaf,points.length*3);
  points.forEach((p,i)=>{
   dummy.position.set(p.x,p.h/2,p.z);dummy.rotation.set(0,0,0);
   dummy.scale.set(.035,p.h,.035);dummy.updateMatrix();stalks.setMatrixAt(i,dummy.matrix);
-  dummy.position.y=p.h;dummy.scale.set(.12,.4,.12);
-  dummy.updateMatrix();tops.setMatrixAt(i,dummy.matrix);
-  dummy.position.y=2.2;dummy.rotation.set(.6,i*2.4,.9);
-  dummy.scale.set(.18,1.2,.05);dummy.updateMatrix();leaves.setMatrixAt(i,dummy.matrix);
+  dummy.position.set(p.x+.08,p.h*.7,p.z);dummy.rotation.z=-.2;
+  dummy.scale.set(.09,.28,.085);dummy.updateMatrix();ears.setMatrixAt(i,dummy.matrix);
+  dummy.position.set(p.x,p.h+.1,p.z);dummy.rotation.set(0,p.angle,0);
+  dummy.scale.set(.10,.43,.1);dummy.updateMatrix();tops.setMatrixAt(i,dummy.matrix);
+  for(let j=0;j<3;j++){
+   const a=p.angle+j*2.1;
+   dummy.position.set(p.x+Math.cos(a)*.23,1.7+j*.38,p.z+Math.sin(a)*.23);
+   dummy.rotation.set(.65,a,j%2?.55:-.55);
+   dummy.scale.set(.23,1.15,.23);dummy.updateMatrix();leaves.setMatrixAt(i*3+j,dummy.matrix);
+  }
  });
- world.add(hedges,stalks,tops,leaves);
+ world.add(hedges,stalks,ears,tops,leaves);
 }
 function plantModel(type,parent,scale=1){
  const g=new THREE.Group();parent.add(g);g.scale.setScalar(scale);
- const material=materials.ingredients[type];
- mesh(geometry.cyl,materials.stalk,0,.3,0,.035,.6,.035,g);
+ mesh(geo.cyl,mat.stalk,0,.26,0,.035,.52,.035,g);
  if(type%2){
-  mesh(geometry.ball,material,0,.65,0,.36,.22,.36,g);
+  mesh(geo.ball,mat.ingredient[type],0,.6,0,.34,.22,.34,g);
   for(let i=0;i<5;i++){
    const a=i*Math.PI*2/5;
-   mesh(geometry.ball,materials.bandage,Math.cos(a)*.23,.79,Math.sin(a)*.23,.04,.025,.04,g);
+   mesh(geo.ball,mat.bandage,Math.cos(a)*.21,.73,Math.sin(a)*.21,.035,.02,.035,g);
   }
  }else{
   for(let i=0;i<6;i++){
    const a=i*Math.PI/3;
-   mesh(geometry.ball,material,Math.cos(a)*.22,.65,Math.sin(a)*.22,.22,.07,.11,g).rotation.y=-a;
+   mesh(geo.ball,mat.ingredient[type],Math.cos(a)*.2,.58,Math.sin(a)*.2,.21,.065,.11,g).rotation.y=-a;
   }
-  mesh(geometry.ball,materials.corn,0,.68,0,.1,.08,.1,g);
+  mesh(geo.ball,mat.corn,0,.62,0,.08,.07,.08,g);
  }
- return g;
-}
-function buildEnemy(){
- const g=new THREE.Group();world.add(g);
- mesh(geometry.cyl,materials.wood,0,.8,0,.08,1.6,.08,g);
- mesh(geometry.box,materials.cloth,0,1.5,0,.65,.95,.35,g);
- mesh(geometry.box,materials.wood,0,1.8,0,1.9,.1,.12,g);
- mesh(geometry.ball,materials.straw,0,2.25,0,.35,.4,.31,g);
- mesh(geometry.cyl,materials.dark,0,2.57,0,.5,.07,.5,g);
- mesh(geometry.cone,materials.dark,0,2.78,0,.33,.4,.33,g);
- for(const x of [-.13,.13])mesh(geometry.ball,materials.eye,x,2.3,-.29,.055,.065,.025,g);
  return g;
 }
 function itemModel(type,parent){
  const g=new THREE.Group();parent.add(g);
- if(type===0){
-  mesh(geometry.cyl,materials.bandage,0,0,0,.12,.2,.12,g).rotation.z=Math.PI/2;
- }else if(type===1){
-  mesh(geometry.cyl,materials.battery,0,0,0,.07,.26,.07,g);
-  mesh(geometry.cyl,materials.dark,0,.15,0,.03,.035,.03,g);
- }else if(type===2){
-  mesh(geometry.box,materials.matches,0,0,0,.19,.12,.09,g);
-  mesh(geometry.box,materials.bandage,0,0,-.05,.12,.06,.01,g);
- }else{
-  mesh(geometry.cone,materials.bell,0,0,0,.15,.22,.15,g);
-  mesh(geometry.cyl,materials.wood,0,.17,0,.03,.18,.03,g);
+ if(type===0)mesh(geo.cyl,mat.bandage,0,0,0,.12,.2,.12,g).rotation.z=Math.PI/2;
+ if(type===1){
+  mesh(geo.cyl,mat.battery,0,0,0,.07,.26,.07,g);
+  mesh(geo.cyl,mat.dark,0,.15,0,.03,.03,.03,g);
+ }
+ if(type===2){
+  mesh(geo.box,mat.matches,0,0,0,.19,.12,.09,g);
+  mesh(geo.box,mat.bandage,0,0,-.05,.12,.06,.01,g);
+ }
+ if(type===3){
+  mesh(geo.cone,mat.bell,0,0,0,.15,.22,.15,g);
+  mesh(geo.cyl,mat.wood,0,.17,0,.03,.18,.03,g);
  }
  return g;
 }
 const hand=new THREE.Group();camera.add(hand);
-mesh(geometry.box,materials.sleeve,0,-.13,.1,.15,.28,.16,hand);
-mesh(geometry.ball,materials.skin,0,.01,0,.08,.1,.07,hand);
+mesh(geo.box,mat.sleeve,0,-.13,.1,.15,.28,.16,hand);
+mesh(geo.ball,mat.skin,0,.01,0,.08,.1,.07,hand);
 const held=new THREE.Group();held.position.set(0,.08,-.04);hand.add(held);
+const flame=mesh(geo.ball,mat.glow,-.2,-.12,-.42,.025,.06,.025,camera);
+flame.visible=false;
 
+function enemyModel(type){
+ const g=new THREE.Group();world.add(g);
+ if(type===0){
+  mesh(geo.cyl,mat.wood,0,.8,0,.08,1.6,.08,g);
+  mesh(geo.box,mat.cloth,0,1.5,0,.65,.95,.35,g);
+  mesh(geo.box,mat.wood,0,1.8,0,1.9,.1,.12,g);
+  mesh(geo.ball,mat.straw,0,2.25,0,.35,.4,.31,g);
+  mesh(geo.cyl,mat.dark,0,2.57,0,.5,.07,.5,g);
+  mesh(geo.cone,mat.dark,0,2.78,0,.33,.4,.33,g);
+  for(const x of [-.13,.13])mesh(geo.ball,mat.eye,x,2.3,-.29,.05,.06,.025,g);
+ }else if(type===1){
+  mesh(geo.ball,mat.wood,0,.55,0,.52,.3,.75,g);
+  mesh(geo.ball,mat.dark,0,.65,-.65,.28,.28,.25,g);
+  for(const x of [-.4,.4])for(const z of [-.4,.4]){
+   const leg=mesh(geo.cone,mat.straw,x,.3,z,.07,.6,.07,g);leg.rotation.z=x;
+  }
+  for(const x of [-.43,.43]){
+   mesh(geo.cone,mat.cloth,x,.93,-.5,.17,.65,.1,g).rotation.z=-x;
+  }
+  for(const x of [-.1,.1])mesh(geo.ball,mat.eye,x,.7,-.87,.035,.035,.02,g);
+ }else{
+  mesh(geo.ball,mat.dark,0,1.65,0,.2,.48,.18,g);
+  for(const side of [-1,1]){
+   const wing=new THREE.Group();wing.position.set(side*.1,1.7,0);g.add(wing);
+   mesh(geo.ball,mat.moth,side*.45,0,0,.55,.42,.055,wing);
+   mesh(geo.ball,mat.eye,side*.43,.02,-.055,.12,.13,.015,wing);
+   wing.userData.wing=side;
+  }
+ }
+ return g;
+}
+function spawnEnemy(type,id){
+ const model=enemyModel(type);
+ enemies.push({type,model,pos:cell(id),node:id,next:null,target:id,
+  memory:0,decision:0,hit:-100,phase:rng()*6});
+ model.position.copy(cell(id));
+}
 function inventoryUI(){
- const signature=inventory.join(',')+':'+selected;
- if(signature===lastInventory)return;
- lastInventory=signature;
- $('inventory').innerHTML=itemNames.map((name,i)=>`
- <div class="slot ${i===selected?'selected':''} ${inventory[i]?'':'empty'}">
- <em>${i+1}</em><span>${inventory[i]}</span><b>${itemIcons[i]}</b><small>${name}</small></div>`).join('');
+ const sig=inventory.join(',')+':'+selected;
+ if(sig===invSignature)return;invSignature=sig;
+ $('inventory').innerHTML=itemNames.map((n,i)=>`
+ <button class="slot ${i===selected?'sel':''} ${inventory[i]?'':'empty'}" data-slot="${i}">
+ <em>${i+1}</em><span>${inventory[i]}</span><b>${icons[i]}</b><small>${n}</small></button>`).join('');
  held.clear();itemModel(selected,held);
 }
+$('inventory').onclick=e=>{
+ const b=e.target.closest('[data-slot]');
+ if(b&&state==='playing'&&!action){
+  selected=+b.dataset.slot;handDip=.3;inventoryUI();
+ }
+};
 function questUI(){
- $('ingredients').innerHTML=ingredientNames.map((name,i)=>
- `<div class="ingredient ${found[i]?'found':''}">${found[i]?'✓':'○'} ${name}</div>`).join('');
+ $('recipe').innerHTML=names.map((n,i)=>`<div class="${found[i]?'found':''}">${found[i]?'✓':'○'} ${n}</div>`).join('');
  $('objective').textContent=found.every(Boolean)
- ?'Все ингредиенты собраны. Вернись к котлу ◆ и нажми E.'
- :'Собери 4 ингредиента. Их расположение отмечено на карте.';
+ ?'Вернись к котлу ◆ и свари зелье.'
+ :'Исследуй проходы. Карта запоминает только увиденное.';
  $('buffs').innerHTML=[
-  buffs.light?`Огонёк ×${buffs.light}`:'',
-  buffs.pollen?`Кора ×${buffs.pollen}`:'',
-  buffs.speed?`Лёгкий шаг ×${buffs.speed}`:''
- ].filter(Boolean).join('<br>')||'Зелья ещё не сварены';
+  buffs.light?'Огонёк ×'+buffs.light:'',
+  buffs.skin?'Кора ×'+buffs.skin:'',
+  buffs.step?'Лёгкий шаг ×'+buffs.step:''
+ ].filter(Boolean).join('<br>')||'У котла безопасно';
 }
 function clearWorld(){
  world.traverse(o=>{if(o.isInstancedMesh)o.dispose()});
  scene.remove(world);world=new THREE.Group();scene.add(world);
 }
-function loadLevel(){
- clearWorld();walls=[];plants=[];supplies=[];hazards=[];action=null;
- found=[false,false,false,false];enemyNext=null;
- maze=makeMaze();
- player.copy(cell(CENTER));player.z+=3;
- yaw=targetYaw=0;pitch=targetPitch=0;
- for(let z=0;z<SIZE;z++)for(let x=0;x<SIZE;x++){
-  const id=z*SIZE+x,p=cell(id);
-  if(x===0)wall(0,p.z,.45,CELL+.4);
-  if(z===0)wall(p.x,0,CELL+.4,.45);
-  if(x===SIZE-1||!maze[id].links.includes(id+1))wall((x+1)*CELL,p.z,.45,CELL+.4);
-  if(z===SIZE-1||!maze[id].links.includes(id+SIZE))wall(p.x,(z+1)*CELL,CELL+.4,.45);
- }
- mesh(geometry.box,materials.ground,SIZE*CELL/2,-.2,SIZE*CELL/2,SIZE*CELL+10,.4,SIZE*CELL+10);
- buildCorn();
+function buildLevel(){
+ rng=generator(hash(runSeed+'|stage:'+level));
+ stageSeed=hash(runSeed+'|stage:'+level).toString(16).padStart(8,'0');
+ clearWorld();walls=[];plants=[];items=[];hazards=[];enemies=[];
+ found=[false,false,false,false];explored=Array(N*N).fill(false);
+ maze=generateMaze();action=null;matchEnd=0;
+ player.copy(cell(CENTER));player.z+=3;targetYaw=yaw=0;targetPitch=pitch=0;
 
+ mesh(geo.box,mat.ground,N*C/2,-.2,N*C/2,N*C+12,.4,N*C+12);
+ for(let z=0;z<N;z++)for(let x=0;x<N;x++){
+  const id=z*N+x,p=cell(id);
+  if(x===0)addWall(0,p.z,.48,C+.4);
+  if(z===0)addWall(p.x,0,C+.4,.48);
+  if(x===N-1||!maze[id].links.includes(id+1))addWall((x+1)*C,p.z,.48,C+.4);
+  if(z===N-1||!maze[id].links.includes(id+N))addWall(p.x,(z+1)*C,C+.4,.48);
+ }
+ buildCorn();
  kettle=new THREE.Group();kettle.position.copy(cell(CENTER));world.add(kettle);
- mesh(geometry.cyl,materials.stone,0,.1,0,1.35,.2,1.35,kettle);
- mesh(geometry.bowl,materials.dark,0,1.05,0,.9,.8,.9,kettle);
- mesh(geometry.ring,materials.dark,0,1.05,0,.9,.9,.9,kettle).rotation.x=Math.PI/2;
- liquid=mesh(geometry.cyl,materials.liquid,0,.93,0,.79,.025,.79,kettle);
+ mesh(geo.cyl,mat.stone,0,.1,0,1.3,.2,1.3,kettle);
+ mesh(geo.bowl,mat.dark,0,1,0,.88,.75,.88,kettle);
+ mesh(geo.ring,mat.dark,0,1,0,.9,.9,.9,kettle).rotation.x=Math.PI/2;
+ liquid=mesh(geo.cyl,mat.liquid,0,.9,0,.78,.025,.78,kettle);
  for(let i=0;i<5;i++){
   const a=i*Math.PI*2/5;
-  mesh(geometry.cone,materials.light,Math.cos(a)*.35,.28,Math.sin(a)*.35,.09,.3,.09,kettle);
+  mesh(geo.cone,mat.glow,Math.cos(a)*.3,.25,Math.sin(a)*.3,.08,.28,.08,kettle);
  }
- kettleLight=new THREE.PointLight(0xffc87d,14,16,1.5);
- kettleLight.position.set(0,2,0);kettle.add(kettleLight);
+ kettleLight=new THREE.PointLight(0xffc582,18,18,1.6);kettleLight.position.y=2;kettle.add(kettleLight);
 
- const free=[];
- for(let id=0;id<SIZE*SIZE;id++)if(!central(id))free.push(id);
- for(let i=free.length-1;i>0;i--){
-  const j=Math.floor(Math.random()*(i+1));[free[i],free[j]]=[free[j],free[i]];
- }
+ // По одному ингредиенту в каждом секторе карты.
+ const used=new Set();
  for(let type=0;type<4;type++){
-  const id=free.pop(),p=cell(id),g=new THREE.Group();g.position.copy(p);world.add(g);
-  const model=plantModel(type,g,1.7);
-  mesh(geometry.ring,materials.ingredients[type],0,.05,0,.65,.65,.65,g).rotation.x=Math.PI/2;
-  plants.push({id,type,g,model,taken:false,phase:Math.random()*6});
- }
- // Полезные предметы гарантированно присутствуют на каждом участке.
- [1,1,0,2,3].forEach(type=>{
-  const id=free.pop(),g=new THREE.Group();g.position.copy(cell(id));world.add(g);
-  mesh(geometry.box,materials.wood,0,.15,0,.6,.3,.5,g);
-  const model=itemModel(type,g);model.scale.setScalar(1.8);model.position.y=.6;
-  supplies.push({g,type,model,taken:false});
- });
- for(let i=0;i<8+level*2;i++){
-  const id=free.pop();if(id===undefined)break;
-  const p=cell(id);p.x+=1.15;p.z+=.9;
-  const g=new THREE.Group();g.position.copy(p);world.add(g);
-  mesh(geometry.cyl,materials.stalk,0,.4,0,.04,.8,.04,g);
-  const bloom=new THREE.Group();bloom.position.y=.8;g.add(bloom);
-  for(let n=0;n<7;n++){
-   const a=n*Math.PI*2/7;
-   mesh(geometry.ball,materials.purple,Math.cos(a)*.28,0,Math.sin(a)*.28,.25,.1,.12,bloom);
+  const candidates=[];
+  for(let id=0;id<N*N;id++){
+   const x=id%N,z=Math.floor(id/N);
+   const quadrant=(x>=4?1:0)+(z>=4?2:0);
+   if(!central(id)&&quadrant===type)candidates.push(id);
   }
-  mesh(geometry.ball,materials.dark,0,.08,0,.18,.12,.18,bloom);
+  const id=candidates[Math.floor(rng()*candidates.length)];used.add(id);
+  const g=new THREE.Group();g.position.copy(cell(id));world.add(g);
+  const model=plantModel(type,g,1.65);
+  mesh(geo.ring,mat.ingredient[type],0,.035,0,.62,.62,.62,g).rotation.x=Math.PI/2;
+  plants.push({id,type,g,model,taken:false,phase:rng()*6});
+ }
+ const free=shuffle(Array.from({length:N*N},(_,i)=>i).filter(id=>!central(id)&&!used.has(id)));
+ [1,1,0,2,3,2].forEach(type=>{
+  const id=free.pop(),g=new THREE.Group();g.position.copy(cell(id));world.add(g);
+  mesh(geo.box,mat.wood,0,.15,0,.6,.3,.5,g);
+  const model=itemModel(type,g);model.scale.setScalar(1.8);model.position.y=.6;
+  items.push({id,g,type,model,taken:false});
+ });
+ for(let i=0;i<7+level*2;i++){
+  const id=free.pop();if(id===undefined)break;
+  const p=cell(id),g=new THREE.Group();g.position.set(p.x+1.15,0,p.z+.9);world.add(g);
+  mesh(geo.cyl,mat.stalk,0,.4,0,.035,.8,.035,g);
+  const bloom=new THREE.Group();bloom.position.y=.8;g.add(bloom);
+  for(let j=0;j<7;j++){
+   const a=j*Math.PI*2/7;
+   mesh(geo.ball,mat.purple,Math.cos(a)*.27,0,Math.sin(a)*.27,.25,.1,.11,bloom);
+  }
+  mesh(geo.ball,mat.dark,0,.08,0,.16,.12,.16,bloom);
   hazards.push({g,bloom});
  }
- // Декоративные цветы.
- for(let i=0;i<45;i++){
-  const p=cell(Math.floor(Math.random()*SIZE*SIZE));
-  const g=new THREE.Group();g.position.set(p.x+1.5,0,p.z-1.3);world.add(g);
+ // Декоративные цветы, не требующие дополнительных источников света.
+ for(let i=0;i<35;i++){
+  const id=Math.floor(rng()*N*N);if(central(id))continue;
+  const p=cell(id),g=new THREE.Group();g.position.set(p.x-1.4,0,p.z+1.2);world.add(g);
   plantModel(i%4,g,.45);
  }
-
- enemyNode=0;enemyPosition.copy(cell(enemyNode));enemy=buildEnemy();
- enemy.position.copy(enemyPosition);freezeEnd=time+7;enemyHit=time;
- $('area').textContent=`Участок ${level} / ${TOTAL}`;
+ spawnEnemy(0,0);
+ spawnEnemy(1,N*N-1);
+ if(level>=2)spawnEnemy(2,N-1);
+ freezeEnd=time+5;
+ $('level').textContent=`Участок ${level} / ${TOTAL}`;
+ $('seedHud').textContent='Сид участка: '+stageSeed;
  questUI();inventoryUI();
- message(level===1
- ?'Ты у безопасного котла. Найди цветы и грибы на карте. Соломенник уже бродит по полю.'
- :'Новый лабиринт. Собери новый рецепт — эффекты прошлых зелий сохранились.',8);
+ explore();drawMap();
 }
 
-function useItem(){
- if(action)return;
- if(!inventory[selected]){message('Предмет закончился.',2);return}
- if(selected===0&&hp>=99){message('Здоровье уже полное.',2);return}
- if(selected===1&&battery>=98){message('Фонарик почти полностью заряжен.',2);return}
- inventory[selected]--;
- action={kind:'item',type:selected,t:0,d:[1.4,1,.6,.65][selected]};
- rustle(.2,.05);inventoryUI();
+// -------------------- Карта и свет --------------------
+function inBeam(position){
+ if(!lightOn||battery<=0)return false;
+ const d=position.clone();d.y=1.5;d.sub(camera.position);
+ return d.length()<23&&view.dot(d.normalize())>.86&&clearLine(player,position);
 }
-function finishItem(type){
- if(type===0){hp=Math.min(100,hp+45);message('Бинт восстановил 45 здоровья.',3)}
- if(type===1){battery=Math.min(100,battery+70);lightOn=true;message('Батарейка заменена.',3)}
- if(type===2){matchEnd=time+22;message('Спичка горит 22 секунды. Можно экономить фонарик.',4);rustle(.4,.1,2500)}
- if(type===3){
-  freezeEnd=time+9;
-  [523,1047,1569].forEach((f,i)=>tone(f,2.7-i*.4,.07/(i+1)));
-  message('Колокол остановил Соломенника на 9 секунд.',4);
+function illuminated(position){
+ const d=player.distanceTo(position);
+ return d<2||inBeam(position)||(time<matchEnd&&d<7)||
+ position.distanceTo(kettle.position)<7;
+}
+function explore(){
+ const current=cellId(player);explored[current]=true;
+ for(let id=0;id<N*N;id++){
+  if(explored[id])continue;
+  const p=cell(id);
+  if(p.distanceTo(player)<15&&illuminated(p)&&clearLine(player,p))explored[id]=true;
  }
- handDip=.5;
 }
+const ctx=$('map').getContext('2d');
+function drawMap(){
+ const s=224/(N*C),offset=8;
+ ctx.fillStyle='#050d08';ctx.fillRect(0,0,240,240);
+ for(let id=0;id<N*N;id++){
+  if(!explored[id])continue;
+  const x=id%N,z=Math.floor(id/N);
+  ctx.fillStyle=central(id)?'#293723':'#1b2a1a';
+  ctx.fillRect(offset+x*C*s,offset+z*C*s,C*s,C*s);
+  ctx.strokeStyle='#75805a';ctx.lineWidth=1.3;
+  for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const nx=x+dx,nz=z+dz,neighbor=nz*N+nx;
+   if(nx>=0&&nz>=0&&nx<N&&nz<N&&maze[id].links.includes(neighbor))continue;
+   ctx.beginPath();
+   if(dx){const xx=offset+(x+(dx>0?1:0))*C*s;ctx.moveTo(xx,offset+z*C*s);ctx.lineTo(xx,offset+(z+1)*C*s)}
+   else{const zz=offset+(z+(dz>0?1:0))*C*s;ctx.moveTo(offset+x*C*s,zz);ctx.lineTo(offset+(x+1)*C*s,zz)}
+   ctx.stroke();
+  }
+ }
+ const kp=kettle.position;ctx.fillStyle='#ddbd72';
+ ctx.save();ctx.translate(offset+kp.x*s,offset+kp.z*s);ctx.rotate(Math.PI/4);ctx.fillRect(-3.5,-3.5,7,7);ctx.restore();
+ plants.forEach(p=>{
+  if(p.taken||!explored[p.id])return;
+  ctx.fillStyle='#'+colors[p.type].toString(16).padStart(6,'0');
+  ctx.beginPath();ctx.arc(offset+p.g.position.x*s,offset+p.g.position.z*s,3,0,Math.PI*2);ctx.fill();
+ });
+ ctx.save();ctx.translate(offset+player.x*s,offset+player.z*s);ctx.rotate(-yaw);
+ ctx.fillStyle='#faf2d5';ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(-3.5,4);ctx.lineTo(3.5,4);ctx.closePath();ctx.fill();ctx.restore();
+}
+
+// -------------------- Враги --------------------
+function patrol(e){
+ const candidates=maze[e.node].links.filter(id=>!central(id));
+ return candidates.length?candidates[Math.floor(rng()*candidates.length)]:e.node;
+}
+function moveEnemy(e,dt,speed,target){
+ let p;
+ if(e.next!==null)p=cell(e.next);
+ else{
+  const center=cell(e.node);
+  if(e.pos.distanceTo(center)>.06)p=center;
+  else if(e.node===target&&cellId(player)===e.node){
+   p=player.clone();
+  }else{
+   const path=route(e.node,target,true);
+   if(!path.length)return;
+   e.next=path[0];p=cell(e.next);
+  }
+ }
+ const d=p.clone().sub(e.pos),length=d.length(),step=Math.min(length,speed*dt);
+ if(length>.001){
+  d.normalize();e.pos.addScaledVector(d,step);
+  const angle=Math.atan2(-d.x,-d.z);
+  e.model.rotation.y=angle;
+ }
+ if(length<=step+.004&&e.next!==null){e.node=e.next;e.next=null}
+}
+function updateEnemies(dt,moving,running,safe){
+ let danger=0;
+ for(const e of enemies){
+  const distance=e.pos.distanceTo(player);
+  const clear=clearLine(player,e.pos);
+  const aim=e.pos.clone();aim.y=e.type===1?.65:1.8;aim.sub(camera.position).normalize();
+  const watched=clear&&view.dot(aim)>.74&&illuminated(e.pos);
+  const beam=inBeam(e.pos);
+  if(!safe&&distance<10)danger=Math.max(danger,1-distance/10);
+  let stop=time<freezeEnd,speed=1.3+level*.1,target=e.target;
+  if(e.type===0){
+   // Соломенник: взгляд работает только если враг освещён.
+   stop=stop||watched;
+   if(!safe)target=cellId(player);
+   speed=1.5+level*.1;
+  }else if(e.type===1){
+   // Шорох слышит бег сквозь стены, но обычные шаги — только близко.
+   const hearing=running?17:5.5/(1+buffs.step*.12);
+   if(!safe&&moving&&distance<hearing){
+    e.target=cellId(player);e.memory=time+6;
+   }
+   if(!safe&&clear&&distance<3){e.target=cellId(player);e.memory=time+5}
+   if(time<e.memory){target=e.target;speed=2.5+level*.08}
+   else{
+    if(time>e.decision||e.node===e.target){
+     e.target=patrol(e);e.decision=time+4;
+    }
+    target=e.target;speed=1.05;
+   }
+  }else{
+   // Ночница не проходит сквозь стены. Свет заставляет её отступать по проходам.
+   speed=2.0+level*.1;
+   if(beam&&!safe){
+    if(time>e.decision){
+     const options=maze[e.node].links.filter(id=>!central(id));
+     options.sort((a,b)=>cell(b).distanceTo(player)-cell(a).distanceTo(player));
+     e.target=options[0]??e.node;e.decision=time+.7;
+    }
+    target=e.target;speed=2.7;
+   }else if(!safe){target=cellId(player)}
+  }
+  // В центральную поляну противники не заходят.
+  if(safe||central(target)){
+   if(time>e.decision){e.target=patrol(e);e.decision=time+3}
+   target=e.target;speed=.8;
+  }
+  if(!stop)moveEnemy(e,dt,speed,target);
+  e.model.position.copy(e.pos);
+  if(e.type===2){
+   e.model.position.y=Math.sin(time*3+e.phase)*.12;
+   e.model.children.forEach(o=>{
+    if(o.userData.wing)o.rotation.y=Math.sin(time*9)*.5*o.userData.wing;
+   });
+  }else e.model.position.y=!stop?Math.sin(time*(e.type===1?12:7))*.025:0;
+  if(!safe&&clear&&distance<1&&time>=freezeEnd&&time-e.hit>1.5&&!(e.type===2&&beam)){
+   e.hit=time;damage(e.type===0?25:e.type===1?17:20);
+   say(['Соломенник рядом! Освети его и смотри прямо.','Шорох услышал тебя. Колокол даст время уйти.','Ночница! Направь на неё фонарик.'][e.type],3);
+  }
+ }
+ return danger;
+}
+
+// -------------------- Действия и переходы --------------------
 function damage(amount){
- hp=Math.max(0,hp-amount);lastDamage=time;flash=Math.min(1,flash+amount*.035);
- if(amount>3){rustle(.25,.12,500);tone(85,.3,.08)}
+ hp=Math.max(0,hp-amount);lastDamage=time;damageFlash=Math.min(1,damageFlash+amount*.035);
+ if(amount>3){noise(.3,.12,500);tone(85,.4,.07)}
  if(hp<=0)finish(false);
 }
-
+function useItem(){
+ if(state!=='playing'||action)return;
+ if(!inventory[selected]){say('Предмет закончился.',2);return}
+ if(selected===0&&hp>=99){say('Здоровье уже полное.',2);return}
+ if(selected===1&&battery>=98){say('Фонарик почти полностью заряжен.',2);return}
+ inventory[selected]--;inventoryUI();
+ action={kind:'item',type:selected,t:0,d:[1.3,1,.65,.7][selected]};
+ noise(.25,.04,1400);
+}
+function finishItem(type){
+ if(type===0){hp=Math.min(100,hp+45);say('Бинт: +45 здоровья.',3)}
+ if(type===1){battery=Math.min(100,battery+70);lightOn=true;say('Новая батарейка.',3)}
+ if(type===2){matchEnd=time+24;noise(.5,.09,2500);say('Спичка освещает всё вокруг 24 секунды.',4)}
+ if(type===3){
+  freezeEnd=time+9;
+  [523,1047,1569].forEach((f,i)=>tone(f,2.8-i*.4,.065/(i+1)));
+  say('Звон остановил всех охотников на 9 секунд.',4);
+ }
+ handDip=.4;
+}
+function interact(){
+ if(state!=='playing'||action)return;
+ if(player.distanceTo(kettle.position)>3){say('Вернись к котлу ◆ в центре карты.',3);return}
+ if(!found.every(Boolean)){say('Нужны все четыре ингредиента.',3);return}
+ action={kind:'brew',t:0,d:3.5};say('Зелье настаивается. У котла безопасно.',4);
+ tone(180,2,.05,'triangle');
+}
+function toggleLight(){
+ if(state!=='playing')return;
+ lightOn=!lightOn;tone(700,.1,.025);
+ if(lightOn&&battery<=0)say('Фонарик разряжен. Используй батарейку или спички.',4);
+}
+function resetInput(){
+ keys={};joy.x=joy.y=0;sprintTouch=false;
+ lookPointer=null;stickPointer=null;
+ $('knob').style.transform='translate(0,0)';
+}
 function exitMouse(){
- dragging=false;keys={};
+ resetInput();
  if(document.pointerLockElement)document.exitPointerLock();
 }
-function captureMouse(){
+function controlsUI(){
+ const play=state==='playing';
+ $('hud').style.display=['playing','paused','choice'].includes(state)?'block':'none';
+ $('mobile').classList.toggle('playing',play);
+ $('pauseBtn').style.display=play?'block':'none';
+ volumes();
+}
+function capture(){
+ if(touchMode)return;
  try{
-  const result=renderer.domElement.requestPointerLock();
-  if(result?.catch)result.catch(()=>{
-   message('Браузер не захватил мышь. Удерживай левую кнопку для обзора.',6);
-  });
- }catch{
-  message('Обзор: удерживай левую кнопку мыши.',5);
- }
+  const p=renderer.domElement.requestPointerLock();
+  if(p?.catch)p.catch(()=>say('Обзор: удерживай левую кнопку мыши.',5));
+ }catch{}
 }
 function pause(){
  if(state!=='playing')return;
- state='paused';exitMouse();
- $('screen').style.display='grid';
- $('title').innerHTML='НОЧЬ<br>ПОДОЖДЁТ';
- $('description').innerHTML='<p>Пауза. Собранные ингредиенты и зелья сохранены до продолжения этого забега.</p>';
- $('start').textContent='Продолжить';
- $('status').textContent='Если мышь не захватывается, удерживай левую кнопку для обзора.';
- volumes();
+ state='paused';exitMouse();controlsUI();
+ $('menu').style.display='grid';$('title').innerHTML='НОЧЬ<br>ПОДОЖДЁТ';
+ $('description').innerHTML=`<p>Сид забега: <b>${escapeHTML(runSeed)}</b></p><p>Весь прогресс текущего забега сохранён до продолжения.</p>`;
+ $('seedOptions').style.display='none';$('start').textContent='Продолжить';
 }
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function finish(won){
- state=won?'won':'dead';exitMouse();
- $('choicesScreen').style.display='none';$('screen').style.display='grid';
- $('title').innerHTML=won?'ТЫ ВСТРЕТИЛ<br>РАССВЕТ':'НОЧЬ ВЗЯЛА<br>СВОЁ';
+ if(state!=='playing')return;
+ state=won?'won':'dead';exitMouse();controlsUI();
+ $('menu').style.display='grid';$('choiceScreen').style.display='none';
+ $('title').innerHTML=won?'ТЫ ВСТРЕТИЛ<br>РАССВЕТ':'ФЕРМА<br>НЕ ОТПУСТИЛА';
  $('description').innerHTML=won
- ?'<p>Пять зелий сварено. Ферма отпускает тебя к дороге. Ты завершил забег.</p>'
- :`<p>Ты дошёл до участка ${level} из ${TOTAL}. Следующий забег начнётся с новым лабиринтом.</p><p>У котла безопасно. Колокол останавливает врага; бинт помогает пережить встречу.</p>`;
- $('start').textContent='Новый забег';$('status').textContent='Нажми кнопку, чтобы начать заново.';
- if(won){
-  scene.background.set(0x778c76);scene.fog.color.set(0x778c76);
-  [261.63,329.63,392].forEach(f=>tone(f,3,.04));
- }else{tone(65,1.2,.12,'triangle');rustle(.7,.15,1000)}
- volumes();
+ ?'<p>Пять зелий сварено. Дорога снова существует. Ты завершил забег.</p>'
+ :`<p>Участок ${level} из ${TOTAL}. Освещай Соломенника, не беги рядом с Шорохом и держи луч на Ночнице.</p>`;
+ $('seedOptions').style.display='block';$('start').textContent='Новый забег';
+ $('status').textContent='Сид завершённого забега: '+runSeed;
+ if(won)[261.63,329.63,392].forEach(f=>tone(f,3,.04));
+ else{tone(60,1.4,.1);noise(.7,.13,1000)}
 }
-function offerBuff(){
- state='choice';action=null;exitMouse();
- $('action').style.display='none';
- $('choicesScreen').style.display='grid';
- $('choiceTitle').textContent='Зелье готово';
- $('choiceInfo').textContent=`Выбери постоянный эффект. Он усилит тебя в следующем лабиринте. Участок ${level} из ${TOTAL} завершён.`;
+async function transition(){
+ const token=++loadingToken;
+ state='loading';exitMouse();controlsUI();
+ $('menu').style.display='none';$('choiceScreen').style.display='none';
+ $('loading').style.display='grid';
+ $('loadingTitle').textContent=`Прорастает участок ${level}…`;
+ $('loadingText').textContent='Сид забега: '+runSeed+' · На карте появится только то, что ты исследовал.';
+ // Даём браузеру действительно нарисовать загрузочный экран.
+ await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+ await new Promise(resolve=>setTimeout(resolve,100));
+ if(token!==loadingToken)return;
+ try{buildLevel()}catch(e){fatal(e);return}
+ await new Promise(resolve=>setTimeout(resolve,180));
+ if(token!==loadingToken)return;
+ $('loading').style.display='none';
+ state='playing';controlsUI();
+ say(level===1
+ ?'Найди растения. Свет раскрывает карту. Слева на карте — только изученные тропы.'
+ :'Новый участок и новый сид. Эффекты зелий остались с тобой.',7);
+ // Захват после async может быть запрещён браузером:
+ // щелчок по сцене запросит его повторно.
+ if(document.hidden)pause();
+}
+function offerChoice(){
+ state='choice';exitMouse();controlsUI();$('choiceScreen').style.display='grid';
  $('choices').innerHTML=`
- <button class="choice" data-buff="light"><b>Огонёк</b><span>Свет ярче, батарейка расходуется медленнее. Эффект складывается.</span></button>
- <button class="choice" data-buff="pollen"><b>Древесная кора</b><span>Снижает урон пыльцы на 40% за выбор, до максимума 85%.</span></button>
- <button class="choice" data-buff="speed"><b>Лёгкий шаг</b><span>+10% к скорости и более быстрое восстановление выносливости.</span></button>`;
- volumes();
+ <button class="choice" data-buff="light"><b>Огонёк</b><span>Ярче луч, на 30% выгоднее расход батареи за каждый выбор.</span></button>
+ <button class="choice" data-buff="skin"><b>Древесная кора</b><span>Меньше урон пыльцы: −35% за выбор, до максимума 85%.</span></button>
+ <button class="choice" data-buff="step"><b>Лёгкий шаг</b><span>+8% скорости, быстрее восстановление сил, тише обычные шаги.</span></button>`;
 }
 $('choices').onclick=e=>{
- const button=e.target.closest('[data-buff]');
- if(!button||state!=='choice')return;
- buffs[button.dataset.buff]++;
- level++;hp=Math.min(100,hp+30);battery=Math.min(100,battery+25);
- $('choicesScreen').style.display='none';
- loadLevel();state='playing';volumes();captureMouse();
+ const b=e.target.closest('[data-buff]');
+ if(!b||state!=='choice')return;
+ buffs[b.dataset.buff]++;level++;hp=Math.min(100,hp+30);battery=Math.min(100,battery+25);
+ transition().catch(fatal);
 };
-
 $('start').onclick=()=>{
  try{
   initAudio();
-  if(state!=='paused'){
-   level=1;hp=100;energy=100;battery=100;inventory=[2,2,2,1];selected=0;
-   buffs={light:0,pollen:0,speed:0};matchEnd=0;lightOn=true;flash=0;
-   lastDamage=-100;exhausted=false;action=null;
-   scene.background.set(0x17241e);scene.fog.color.set(0x17241e);
-   loadLevel();
+  if(state==='paused'){
+   $('menu').style.display='none';state='playing';controlsUI();capture();return;
   }
-  state='playing';$('screen').style.display='none';$('hud').style.display='block';
-  volumes();captureMouse();
- }catch(error){fatal(error)}
+  runSeed=$('seed').value.trim()||randomSeed();
+  level=1;hp=100;energy=100;battery=100;
+  inventory=[2,2,2,1];selected=0;buffs={light:0,skin:0,step:0};
+  damageFlash=0;lastDamage=-100;lightOn=true;exhausted=false;
+  transition().catch(fatal);
+ }catch(e){fatal(e)}
 };
+$('pauseBtn').onclick=pause;
 
-// Камера: события находятся на настоящем canvas, а не на перекрывающем HUD.
-renderer.domElement.addEventListener('mousedown',e=>{
- if(state!=='playing'||e.button!==0)return;
- dragging=true;lastPointerX=e.clientX;lastPointerY=e.clientY;e.preventDefault();
-});
-document.addEventListener('mouseup',()=>dragging=false);
-document.addEventListener('mousemove',e=>{
- if(state!=='playing')return;
- let dx=0,dy=0;
- if(document.pointerLockElement===renderer.domElement){
-  dx=e.movementX;dy=e.movementY;
- }else if(dragging){
-  dx=e.clientX-lastPointerX;dy=e.clientY-lastPointerY;
- }else return;
- lastPointerX=e.clientX;lastPointerY=e.clientY;
- targetYaw-=dx*.0024;
- targetPitch=THREE.MathUtils.clamp(targetPitch-dy*.0024,-1.25,1.25);
-});
-document.addEventListener('pointerlockchange',()=>{
- if(!document.pointerLockElement&&state==='playing')pause();
-});
+// -------------------- Управление --------------------
 document.addEventListener('keydown',e=>{
  if(state!=='playing')return;
- if(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','KeyF','Space'].includes(e.code))e.preventDefault();
+ if(['KeyW','KeyA','KeyS','KeyD','KeyE','KeyQ','KeyF','Space'].includes(e.code))e.preventDefault();
  keys[e.code]=true;
  if(e.code==='Escape'){pause();return}
  if(e.repeat)return;
- if(/^Digit[1-4]$/.test(e.code)&&!action){
-  selected=Number(e.code.slice(-1))-1;handDip=.35;inventoryUI();
- }
+ if(/^Digit[1-4]$/.test(e.code)&&!action){selected=+e.code.slice(-1)-1;handDip=.3;inventoryUI()}
  if(e.code==='KeyQ')useItem();
- if(e.code==='KeyF'){lightOn=!lightOn;tone(700,.08,.025)}
- if(e.code==='KeyE'&&!action&&player.distanceTo(kettle.position)<3){
-  if(!found.every(Boolean)){message('Для зелья нужны все четыре ингредиента.',4);return}
-  action={kind:'brew',t:0,d:3.2};message('Варим зелье… Здесь ты в безопасности.',4);
-  tone(180,1.5,.06,'triangle');
- }
+ if(e.code==='KeyE')interact();
+ if(e.code==='KeyF')toggleLight();
 });
 document.addEventListener('keyup',e=>keys[e.code]=false);
+
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(state!=='playing')return;
+ if(e.pointerType==='touch'&&!touchMode){
+  touchMode=true;deviceUI();renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));
+ }
+ if(lookPointer!==null)return;
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ lookPointer=e.pointerId;lookX=e.clientX;lookY=e.clientY;
+ renderer.domElement.setPointerCapture(e.pointerId);
+ if(e.pointerType==='mouse'&&!document.pointerLockElement)capture();
+ e.preventDefault();
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(state!=='playing'||e.pointerId!==lookPointer||document.pointerLockElement)return;
+ const scale=e.pointerType==='touch'?.004:.0024;
+ targetYaw-=(e.clientX-lookX)*scale;
+ targetPitch=THREE.MathUtils.clamp(targetPitch-(e.clientY-lookY)*scale,-1.2,1.2);
+ lookX=e.clientX;lookY=e.clientY;e.preventDefault();
+});
+function stopLook(e){if(e.pointerId===lookPointer)lookPointer=null}
+renderer.domElement.addEventListener('pointerup',stopLook);
+renderer.domElement.addEventListener('pointercancel',stopLook);
+document.addEventListener('mousemove',e=>{
+ if(state==='playing'&&document.pointerLockElement===renderer.domElement){
+  targetYaw-=e.movementX*.0024;
+  targetPitch=THREE.MathUtils.clamp(targetPitch-e.movementY*.0024,-1.2,1.2);
+ }
+});
+document.addEventListener('pointerlockchange',()=>{
+ if(!document.pointerLockElement&&state==='playing'&&!touchMode)pause();
+});
+const stick=$('stick');
+function moveStick(e){
+ const r=stick.getBoundingClientRect();
+ let x=(e.clientX-r.left-r.width/2)/45,y=(e.clientY-r.top-r.height/2)/45;
+ const length=Math.hypot(x,y);if(length>1){x/=length;y/=length}
+ joy.x=Math.abs(x)<.08?0:x;joy.y=Math.abs(y)<.08?0:y;
+ $('knob').style.transform=`translate(${x*36}px,${y*36}px)`;
+}
+stick.addEventListener('pointerdown',e=>{
+ if(state!=='playing'||stickPointer!==null)return;
+ stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);moveStick(e);e.preventDefault();
+});
+stick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){moveStick(e);e.preventDefault()}});
+function endStick(e){
+ if(e.pointerId!==stickPointer)return;
+ stickPointer=null;joy.x=joy.y=0;$('knob').style.transform='translate(0,0)';
+}
+stick.addEventListener('pointerup',endStick);stick.addEventListener('pointercancel',endStick);
+$('runBtn').addEventListener('pointerdown',e=>{
+ sprintTouch=true;$('runBtn').setPointerCapture(e.pointerId);e.preventDefault();
+});
+for(const name of ['pointerup','pointercancel'])$('runBtn').addEventListener(name,()=>sprintTouch=false);
+$('lightBtn').onclick=toggleLight;$('useBtn').onclick=useItem;$('interactBtn').onclick=interact;
 window.addEventListener('blur',pause);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){
+  pause();if(audio)audio.suspend().catch(()=>{});
+ }else if(audio){
+  audio.resume().catch(()=>{});
+ }
+});
 window.addEventListener('resize',()=>{
  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
  renderer.setSize(innerWidth,innerHeight);
 });
 
-// Карта показывает цель и растения, но не раскрывает позицию врага.
-const mapContext=$('map').getContext('2d');
-function drawMap(){
- const ctx=mapContext,scale=224/(SIZE*CELL),offset=8;
- ctx.clearRect(0,0,240,240);ctx.fillStyle='#142014';ctx.fillRect(0,0,240,240);
- ctx.fillStyle='#657051';
- walls.forEach(w=>ctx.fillRect(offset+w.a*scale,offset+w.c*scale,
-  Math.max(1,(w.b-w.a)*scale),Math.max(1,(w.d-w.c)*scale)));
- const k=kettle.position;
- ctx.fillStyle='#e7bb6b';
- ctx.save();ctx.translate(offset+k.x*scale,offset+k.z*scale);ctx.rotate(Math.PI/4);
- ctx.fillRect(-4,-4,8,8);ctx.restore();
- plants.forEach(p=>{
-  if(p.taken)return;
-  ctx.fillStyle='#'+ingredientColors[p.type].toString(16).padStart(6,'0');
-  ctx.beginPath();ctx.arc(offset+p.g.position.x*scale,offset+p.g.position.z*scale,3.3,0,Math.PI*2);ctx.fill();
- });
- ctx.save();ctx.translate(offset+player.x*scale,offset+player.z*scale);ctx.rotate(-yaw);
- ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(-4,4);ctx.lineTo(4,4);ctx.closePath();ctx.fill();ctx.restore();
-}
-
-function updateEnemy(dt,safe){
- const delta=enemyPosition.clone();delta.y=1.9;delta.sub(camera.position).normalize();
- const distance=player.distanceTo(enemyPosition);
- const visible=clearLine(player,enemyPosition);
- const watched=visible&&distance<28&&view.dot(delta)>.73;
-
- if(!safe&&!watched&&time>=freezeEnd){
-  let target;
-  if(enemyNext!==null){
-   target=cell(enemyNext);
-  }else if(enemyNode===getCell(player)){
-   target=player.clone();
-  }else{
-   // Сначала возвращаемся к центру текущего узла.
-   const center=cell(enemyNode);
-   if(enemyPosition.distanceTo(center)>.06)target=center;
-   else{
-    enemyNext=nextPath(enemyNode,getCell(player));
-    target=cell(enemyNext);
-   }
-  }
-  const d=target.clone().sub(enemyPosition),length=d.length();
-  const step=Math.min(length,(1.65+level*.13)*dt);
-  if(length>.001){
-   d.normalize();enemyPosition.addScaledVector(d,step);
-   enemy.rotation.y=Math.atan2(-d.x,-d.z);
-  }
-  if(length<=step+.005&&enemyNext!==null){
-   enemyNode=enemyNext;enemyNext=null;
-  }
- }else{
-  enemy.rotation.y=Math.atan2(enemyPosition.x-player.x,enemyPosition.z-player.z);
- }
- enemy.position.copy(enemyPosition);
- enemy.position.y=watched?0:Math.sin(time*7)*.025;
- if(!safe&&visible&&distance<1&&time>=freezeEnd&&time-enemyHit>1.3){
-  enemyHit=time;damage(24);message('Соломенник рядом! Смотри на него или используй колокол.',3);
- }
- if(!safe&&distance<10&&time>nextRustle){
-  nextRustle=time+4;rustle(.9,.10,900,Math.sin(time)>.0?.65:-.65);
- }
-}
-
+// -------------------- Игровой цикл --------------------
 function update(dt){
  time+=dt;
- yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*24));
- pitch+=(targetPitch-pitch)*(1-Math.exp(-dt*24));
- if(energy<=1)exhausted=true;
- if(energy>28)exhausted=false;
- const x=(keys.KeyD?1:0)-(keys.KeyA?1:0);
- const z=(keys.KeyW?1:0)-(keys.KeyS?1:0);
- const length=Math.hypot(x,z);
- const running=(keys.ShiftLeft||keys.ShiftRight)&&!exhausted&&length>0&&!action;
- const speed=(running?4.1:2.65)*(1+buffs.speed*.1);
+ yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*22));
+ pitch+=(targetPitch-pitch)*(1-Math.exp(-dt*22));
+ if(energy<=1)exhausted=true;if(energy>28)exhausted=false;
+ let ix=(keys.KeyD?1:0)-(keys.KeyA?1:0)+joy.x;
+ let iz=(keys.KeyW?1:0)-(keys.KeyS?1:0)-joy.y;
+ const inputLength=Math.hypot(ix,iz);
+ if(inputLength>1){ix/=inputLength;iz/=inputLength}
+ const running=(keys.ShiftLeft||keys.ShiftRight||sprintTouch)&&!exhausted&&inputLength>.1&&!action;
+ const speed=(running?4.1:2.6)*(1+buffs.step*.08);
  const ox=player.x,oz=player.z;
- if(length&&!action){
-  const dx=(Math.cos(yaw)*x-Math.sin(yaw)*z)/length*speed*dt;
-  const dz=(-Math.sin(yaw)*x-Math.cos(yaw)*z)/length*speed*dt;
+ if(inputLength>.05&&!action){
+  const dx=(Math.cos(yaw)*ix-Math.sin(yaw)*iz)*speed*dt;
+  const dz=(-Math.sin(yaw)*ix-Math.cos(yaw)*iz)*speed*dt;
   if(!blocked(player.x+dx,player.z))player.x+=dx;
   if(!blocked(player.x,player.z+dz))player.z+=dz;
  }
  const moving=Math.hypot(player.x-ox,player.z-oz)>.0001;
- energy=THREE.MathUtils.clamp(energy+(running&&moving?-21:16+buffs.speed*3)*dt,0,100);
+ energy=THREE.MathUtils.clamp(energy+(running&&moving?-21:15+buffs.step*3)*dt,0,100);
  if(moving){
-  walk+=dt*(running?13:9);
+  walk+=dt*(running?12:8);
   if(time>nextStep){
-   nextStep=time+(running?.29:.43);rustle(.13,.065,1100,Math.sin(walk)*.2);tone(85,.09,.022);
+   nextStep=time+(running?.29:.46);noise(.17,.055,1050,Math.sin(walk)*.15);tone(85,.12,.018);
   }
  }
+ const targetBob=moving?Math.sin(walk)*.025:Math.sin(time*1.5)*.003;
+ bob+=(targetBob-bob)*(1-Math.exp(-dt*14));
  camera.rotation.set(pitch,yaw,0);
- camera.position.set(player.x,1.65+(moving?Math.sin(walk)*.027:Math.sin(time*1.5)*.003),player.z);
- camera.getWorldDirection(view);
+ camera.position.set(player.x,1.65+bob,player.z);camera.getWorldDirection(view);
 
- if(lightOn&&battery>0)battery=Math.max(0,battery-dt*.23/(1+buffs.light*.45));
- const powered=lightOn&&battery>0;
- const desired=powered?32*(1+buffs.light*.22):0;
- flashlight.intensity+=(desired-flashlight.intensity)*(1-Math.exp(-dt*9));
- personalLight.intensity=powered?1.2:.2;
- matchLight.intensity=time<matchEnd?8+Math.sin(time*13)*.4:0;
-
- const safe=player.distanceTo(kettle.position)<6;
- updateEnemy(dt,safe);
+ if(lightOn&&battery>0)battery=Math.max(0,battery-dt*.25/(1+buffs.light*.3));
+ const torchTarget=lightOn&&battery>0?42*(1+buffs.light*.2):0;
+ torch.intensity+=(torchTarget-torch.intensity)*(1-Math.exp(-dt*10));
+ const litMatch=time<matchEnd;
+ matchLight.intensity=litMatch?8+Math.sin(time*11)*.35:0;
+ flame.visible=litMatch;flame.scale.y=.06+Math.sin(time*13)*.008;
+ const safe=central(cellId(player));
+ const danger=updateEnemies(dt,moving,running,safe);
  if(state!=='playing')return;
 
- let poisoned=false;
+ let poison=false;
  for(const h of hazards){
-  const close=player.distanceTo(h.g.position)<1.3;
+  const active=!safe&&moving&&player.distanceTo(h.g.position)<1.25;
   h.bloom.rotation.y=Math.sin(time)*.12;
-  h.bloom.scale.setScalar(1+Math.sin(time*3)*.04+(close&&moving?.1:0));
-  if(!safe&&close&&moving)poisoned=true;
+  h.bloom.scale.setScalar(1+Math.sin(time*3)*.04+(active?.12:0));
+  if(active)poison=true;
  }
- if(poisoned){
-  damage(14*(1-Math.min(.85,buffs.pollen*.4))*dt);
-  if(time>messageEnd)message('Пыльцеглот! Отойди по краю прохода или остановись.',3);
+ if(poison){
+  damage(14*(1-Math.min(.85,buffs.skin*.35))*dt);
+  if(time>messageEnd)say('Пыльца обжигает. Остановись или обойди цветок по краю.',3);
  }
  if(state!=='playing')return;
  if(safe&&time-lastDamage>4)hp=Math.min(100,hp+4*dt);
 
- for(const plant of plants){
-  if(plant.taken)continue;
-  plant.model.rotation.y+=dt*.35;
-  plant.model.position.y=Math.sin(time*2+plant.phase)*.04;
-  if(player.distanceTo(plant.g.position)<1.05){
-   plant.taken=true;plant.g.visible=false;found[plant.type]=true;
-   questUI();tone(660,1,.035);tone(990,1.4,.02);
-   message(found.every(Boolean)?'Рецепт собран! Возвращайся к котлу ◆.':`${ingredientNames[plant.type]} найден. ${found.filter(Boolean).length}/4`,4);
+ for(const p of plants){
+  if(p.taken)continue;
+  p.model.rotation.y+=dt*.3;p.model.position.y=Math.sin(time*1.5+p.phase)*.035;
+  if(player.distanceTo(p.g.position)<1.05){
+   p.taken=true;p.g.visible=false;found[p.type]=true;
+   questUI();tone(660,1,.035);tone(990,1.4,.022);
+   say(found.every(Boolean)?'Рецепт собран. Вернись к котлу ◆.':`${names[p.type]} · ${found.filter(Boolean).length}/4`,4);
   }
  }
- for(const supply of supplies){
-  if(supply.taken)continue;
-  supply.model.rotation.y+=dt*.5;
-  supply.model.position.y=.6+Math.sin(time*2)*.04;
-  if(player.distanceTo(supply.g.position)<.95){
-   supply.taken=true;supply.g.visible=false;inventory[supply.type]++;
-   inventoryUI();tone(600,.25,.035);message(`Найдено: ${itemNames[supply.type]}. Выбери слот и нажми Q.`,3);
+ for(const i of items){
+  if(i.taken)continue;
+  i.model.rotation.y+=dt*.45;i.model.position.y=.6+Math.sin(time*2)*.04;
+  if(player.distanceTo(i.g.position)<.95){
+   i.taken=true;i.g.visible=false;inventory[i.type]++;inventoryUI();
+   tone(600,.6,.03);say(`Найдено: ${itemNames[i.type]}. Выбери слот и используй предмет.`,3);
   }
  }
-
  if(action){
-  action.t+=dt;
-  const progress=Math.min(1,action.t/action.d);
-  $('action').style.display='block';
-  $('actionText').textContent=action.kind==='brew'?'Зелье настаивается…':
+  action.t+=dt;const p=Math.min(1,action.t/action.d);
+  $('progress').style.display='block';
+  $('progressText').textContent=action.kind==='brew'?'Зелье настаивается…':
    ['Перевязываешь рану…','Меняешь батарейку…','Зажигаешь спичку…','Звонишь…'][action.type];
-  $('actionFill').style.width=progress*100+'%';
-  if(progress>=1){
+  $('progressFill').style.width=p*100+'%';
+  if(p>=1){
    const done=action;action=null;
    if(done.kind==='brew'){
-    if(level===TOTAL)finish(true);else offerBuff();
+    $('progress').style.display='none';
+    if(level===TOTAL)finish(true);else offerChoice();
     return;
    }
    finishItem(done.type);
   }
- }else $('action').style.display='none';
+ }else $('progress').style.display='none';
 
- const lift=action?Math.sin(action.t/action.d*Math.PI):0;
  handDip=Math.max(0,handDip-dt*2);
- hand.position.set(.32-lift*.14,-.38+Math.sin(walk)*.01+lift*.12-handDip*.1,-.51-lift*.1);
+ const lift=action?Math.sin(action.t/action.d*Math.PI):0;
+ hand.position.set(.32-lift*.14,-.38+bob*.4+lift*.12-handDip*.1,-.51-lift*.1);
  hand.rotation.set(-.12-lift*.5,-.1,-.12+lift*.3);
  held.visible=inventory[selected]>0||!!action;
+ liquid.position.y=.9+Math.sin(time*2)*.013;
+ kettleLight.intensity=action?.kind==='brew'?21+Math.sin(time*6):18;
 
- liquid.position.y=.93+Math.sin(time*2)*.014;
- kettleLight.intensity=action?.kind==='brew'?19+Math.sin(time*8)*2:14;
- flash=Math.max(0,flash-dt*.8);
- $('damage').style.opacity=flash*.75;
- camera.rotation.z=Math.sin(time*24)*flash*.012;
- $('health').style.width=hp+'%';$('hpText').textContent=Math.ceil(hp);
- $('energy').style.width=energy+'%';
- $('batteryBar').style.width=battery+'%';
- $('batteryText').textContent=Math.ceil(battery)+'% '+(lightOn?'●':'○');
- const near=player.distanceTo(kettle.position)<3;
- $('prompt').textContent=action?'':near
- ?(found.every(Boolean)?'[ E ] Сварить зелье':'Котёл · безопасное место · нужно 4 ингредиента')
- :time<freezeEnd?'Соломенник обездвижен':time<matchEnd?'Спичка горит':'';
+ damageFlash=Math.max(0,damageFlash-dt*.8);
+ $('damage').style.opacity=damageFlash*.75;
+ camera.rotation.z=Math.sin(time*22)*damageFlash*.008;
+ $('hp').style.width=hp+'%';$('hpText').textContent=Math.ceil(hp);
+ $('sp').style.width=energy+'%';$('bat').style.width=battery+'%';
+ $('batText').textContent=Math.ceil(battery)+'% '+(lightOn?'●':'○');
+ $('prompt').textContent=action?'':player.distanceTo(kettle.position)<3
+ ?(found.every(Boolean)?(touchMode?'Кнопка «Котёл» — сварить зелье':'[ E ] Сварить зелье'):'Котёл · безопасная поляна')
+ :litMatch?`Спичка: ${Math.ceil(matchEnd-time)} сек.`:
+ time<freezeEnd?`Звон: ${Math.ceil(freezeEnd-time)} сек.`:'';
  if(time>messageEnd)$('message').textContent='';
- mapTimer+=dt;if(mapTimer>.12){mapTimer=0;drawMap()}
+ mapTime+=dt;
+ if(mapTime>.15){mapTime=0;explore();drawMap()}
+
+ if(danger>.35&&time>nextHeartbeat){
+  nextHeartbeat=time+1-danger*.35;tone(55,.2,.045*danger);tone(78,.3,.018*danger);
+ }
+ if(running&&moving&&time>nextBreath){
+  nextBreath=time+.9;noise(.5,.055,600);
+ }
  if(time>nextRustle&&!safe){
-  nextRustle=time+6+Math.random()*6;rustle(1,.075,1700,Math.random()*.8-.4);
+  nextRustle=time+7+Math.random()*7;noise(1.1,.07,1700,Math.sin(time)*.7);
  }
 }
 
-$('start').disabled=false;
-$('start').textContent='Начать забег';
-$('status').textContent='Игра загружена. Музыка включится после нажатия кнопки.';
-
+$('start').disabled=false;$('start').textContent='Начать забег';
+$('status').textContent='Готово. Новый случайный сид — при каждом старте с пустым полем.';
 let previous=performance.now();
+let slowTime=0,qualityReduced=false;
 function frame(now){
- if(fatalShown)return;
+ if(failed)return;
+ const raw=(now-previous)/1000;previous=now;
  try{
-  const dt=Math.min((now-previous)/1000,.04);previous=now;
-  if(state==='playing')update(dt);
+  if(state==='playing'){
+   update(Math.min(raw,.04));
+   // Осторожное снижение разрешения на медленных устройствах.
+   if(raw>.04)slowTime+=raw;else slowTime=Math.max(0,slowTime-raw*.3);
+   if(slowTime>5&&!qualityReduced){
+    qualityReduced=true;
+    renderer.setPixelRatio(Math.min(devicePixelRatio,1));
+   }
+  }
   renderer.render(scene,camera);
   requestAnimationFrame(frame);
- }catch(error){
-  if(master&&audio)master.gain.setTargetAtTime(0,audio.currentTime,.1);
-  fatal(error);
+ }catch(e){
+  if(audio&&master)master.gain.setTargetAtTime(0,audio.currentTime,.1);
+  fatal(e);
  }
 }
 requestAnimationFrame(frame);
-
 renderer.domElement.addEventListener('webglcontextlost',e=>{
- e.preventDefault();
- fatal(new Error('Браузер потерял графический контекст WebGL. Закрой лишние вкладки и обнови страницу.'));
+ e.preventDefault();fatal(Error('Потерян контекст WebGL. Закрой лишние вкладки и обнови страницу.'));
 });
 
-} catch(error) {
- fatal(error);
-}
+}catch(e){fatal(e)}
 </script>
 </body>
 </html>
