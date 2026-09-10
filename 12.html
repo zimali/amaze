@@ -2608,6 +2608,1401 @@ function update(dt) {
 
  inventoryUI();
 }
+
+// ============================================================
+// УРОЖАЙНАЯ НОЧЬ — МЕНЮ, КАРТА, ЗЕЛЬЯ, АНИМАЦИИ
+// Для предыдущего полного index.html.
+// Вставить внутри существующего script перед включением start.
+// ============================================================
+
+// ---------- Дополнительное оформление ----------
+
+const comfortStyles = document.createElement('style');
+
+comfortStyles.textContent = `
+  .menu-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .menu-actions #start {
+    grid-column: 1 / -1;
+    margin: 0;
+    min-height: 52px;
+    font-size: 15px;
+  }
+
+  .secondary-button {
+    background: #203423;
+    color: #dce4c6;
+    border-color: #c0d08b30;
+  }
+
+  .menu-note {
+    padding: 12px 14px;
+    margin: 16px 0;
+    border-left: 2px solid #b8c88680;
+    background: #b0c77b08;
+    color: #aabc95;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  #settingsScreen,
+  #helpScreen,
+  #largeMapScreen {
+    display: none;
+    z-index: 45;
+  }
+
+  #settingsScreen .card {
+    width: min(650px, 100%);
+  }
+
+  .settings-group {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #c9d29518;
+  }
+
+  .settings-heading {
+    color: #c9d69e;
+    font-size: 10px;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+  }
+
+  .setting-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(120px, 1fr);
+    align-items: center;
+    gap: 15px;
+    margin: 16px 0;
+    color: #c4cfb4;
+    font-size: 12px;
+  }
+
+  .setting-row small {
+    display: block;
+    font-size: 10px;
+    color: #829776;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .setting-row output {
+    display: block;
+    color: #d6dcb7;
+    text-align: right;
+    font-size: 10px;
+    margin-bottom: 5px;
+  }
+
+  .setting-row select {
+    width: 100%;
+    padding: 10px;
+    background: #0a170e;
+    color: #dce2c8;
+    border: 1px solid #b3c18540;
+    border-radius: 8px;
+    font: inherit;
+  }
+
+  .settings-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 25px;
+  }
+
+  #menuSubtitle {
+    color: #aabd98;
+    font-size: 12px;
+    letter-spacing: .03em;
+    line-height: 1.8;
+  }
+
+  #mapPanel {
+    pointer-events: auto;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+
+  #mapPanel:hover {
+    border-color: #d9d89988;
+  }
+
+  #mapPanel::after {
+    content: 'ОТКРЫТЬ КАРТУ';
+    display: block;
+    text-align: center;
+    margin-top: 6px;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #9cab83;
+  }
+
+  #largeMapScreen {
+    background: #071008f5;
+    padding: max(16px, env(safe-area-inset-top)) 16px;
+  }
+
+  .map-layout {
+    width: min(1100px, 100%);
+    height: min(94vh, 94dvh);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+
+  .map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .map-header h2 {
+    margin: 4px 0;
+    font-size: clamp(23px, 4vw, 36px);
+  }
+
+  .map-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid #b1c57926;
+    border-radius: 16px;
+    background: #08120b;
+  }
+
+  #largeMap {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1;
+  }
+
+  .map-footer {
+    color: #a7bb94;
+    font-size: 12px;
+    line-height: 1.7;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  #mapSeed {
+    font-family: monospace;
+    overflow-wrap: anywhere;
+  }
+
+  .modifier-tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #b7c58c;
+    margin-bottom: 7px;
+  }
+
+  .modifier-level {
+    display: block;
+    font-size: 10px;
+    color: #8fa67d;
+    margin-top: 10px;
+  }
+
+  .choice {
+    transition: background .2s, border-color .2s, transform .2s;
+  }
+
+  .choice:hover {
+    transform: translateY(-2px);
+    border-color: #d2d097aa;
+  }
+
+  #helpScreen li {
+    margin: 11px 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #bdc9ad;
+  }
+
+  @media(max-width: 500px) {
+    .setting-row {
+      grid-template-columns: 1fr;
+      gap: 7px;
+    }
+
+    .setting-row output {
+      display: inline;
+      float: right;
+    }
+
+    .map-footer {
+      font-size: 10px;
+    }
+  }
+`;
+
+document.head.appendChild(comfortStyles);
+
+// ---------- Сохраняемые настройки ----------
+
+const defaultComfort = {
+  sensitivity: 1,
+  fov: 74,
+  motion: .7,
+  damageEffects: .8,
+  quality: 'auto',
+  music: 35,
+  effects: 65,
+  crosshair: true
+};
+
+let comfort = { ...defaultComfort };
+
+try {
+  const saved = JSON.parse(
+    localStorage.getItem('harvest-comfort-v1') || 'null'
+  );
+
+  if (saved && typeof saved === 'object') {
+    comfort = { ...comfort, ...saved };
+  }
+} catch {}
+
+comfort.sensitivity = THREE.MathUtils.clamp(
+  Number(comfort.sensitivity) || 1, .35, 2.5
+);
+comfort.fov = THREE.MathUtils.clamp(
+  Number(comfort.fov) || 74, 60, 95
+);
+comfort.motion = THREE.MathUtils.clamp(
+  Number(comfort.motion) || 0, 0, 1
+);
+comfort.damageEffects = THREE.MathUtils.clamp(
+  Number(comfort.damageEffects) || 0, 0, 1
+);
+comfort.music = THREE.MathUtils.clamp(
+  Number(comfort.music) || 0, 0, 100
+);
+comfort.effects = THREE.MathUtils.clamp(
+  Number(comfort.effects) || 0, 0, 100
+);
+
+if (!['auto', 'low', 'medium', 'high'].includes(comfort.quality)) {
+  comfort.quality = 'auto';
+}
+
+function saveComfort() {
+  try {
+    localStorage.setItem(
+      'harvest-comfort-v1',
+      JSON.stringify(comfort)
+    );
+  } catch {}
+}
+
+// ---------- Главное меню ----------
+
+const menuCard = $('menu').querySelector('.card');
+const startButton = $('start');
+
+const menuSubtitle = document.createElement('div');
+menuSubtitle.id = 'menuSubtitle';
+menuSubtitle.textContent =
+  'Исследуй ночную ферму. Собери урожай. Выбери, кем вернёшься из темноты.';
+
+$('title').insertAdjacentElement('afterend', menuSubtitle);
+
+const menuActions = document.createElement('div');
+menuActions.className = 'menu-actions';
+
+startButton.parentNode.insertBefore(menuActions, startButton);
+menuActions.appendChild(startButton);
+
+const settingsButton = document.createElement('button');
+settingsButton.className = 'secondary-button';
+settingsButton.textContent = 'Настройки';
+
+const helpButton = document.createElement('button');
+helpButton.className = 'secondary-button';
+helpButton.textContent = 'Как играть';
+
+menuActions.append(settingsButton, helpButton);
+
+const menuNote = document.createElement('div');
+menuNote.className = 'menu-note';
+menuNote.textContent =
+  'Случайный сид создаёт новый мир. Свой сид позволяет вернуться к знакомому лабиринту.';
+
+menuActions.insertAdjacentElement('afterend', menuNote);
+
+// ---------- Экран настроек ----------
+
+const settingsScreen = document.createElement('div');
+settingsScreen.id = 'settingsScreen';
+settingsScreen.className = 'screen';
+settingsScreen.innerHTML = `
+  <div class="card">
+    <div class="eyebrow">СДЕЛАЙ НОЧЬ УДОБНОЙ</div>
+    <h2>Настройки</h2>
+    <p>Изменения применяются сразу и сохраняются в этом браузере.</p>
+
+    <div class="settings-group">
+      <div class="settings-heading">ЗВУК</div>
+      <div id="audioSettingsHost"></div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-heading">КАМЕРА И КОМФОРТ</div>
+
+      <div class="setting-row">
+        <label for="sensitivitySetting">
+          Чувствительность
+          <small>Для мыши и сенсорного обзора</small>
+        </label>
+        <div>
+          <output id="sensitivityValue"></output>
+          <input id="sensitivitySetting" type="range"
+            min="35" max="250" step="5">
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label for="fovSetting">
+          Поле зрения
+          <small>Большое значение показывает больше по краям</small>
+        </label>
+        <div>
+          <output id="fovValue"></output>
+          <input id="fovSetting" type="range"
+            min="60" max="95" step="1">
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label for="motionSetting">
+          Покачивание при ходьбе
+          <small>Поворот камеры всегда без инерции</small>
+        </label>
+        <div>
+          <output id="motionValue"></output>
+          <input id="motionSetting" type="range"
+            min="0" max="100" step="5">
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label for="damageSetting">
+          Эффекты урона
+          <small>Красная виньетка и дрожание камеры</small>
+        </label>
+        <div>
+          <output id="damageValue"></output>
+          <input id="damageSetting" type="range"
+            min="0" max="100" step="5">
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label for="crosshairSetting">Точка в центре экрана</label>
+        <select id="crosshairSetting">
+          <option value="on">Показывать</option>
+          <option value="off">Скрыть</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-heading">ИЗОБРАЖЕНИЕ</div>
+
+      <div class="setting-row">
+        <label for="qualitySetting">
+          Качество рендера
+          <small>Низкое значение помогает слабым телефонам</small>
+        </label>
+        <select id="qualitySetting">
+          <option value="auto">Автоматически</option>
+          <option value="low">Экономное</option>
+          <option value="medium">Сбалансированное</option>
+          <option value="high">Чёткое</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-buttons">
+      <button id="settingsClose">Готово</button>
+      <button id="settingsReset" class="secondary-button">Сбросить</button>
+      <button id="fullscreenButton" class="secondary-button">
+        Полный экран
+      </button>
+    </div>
+    <p id="settingsMessage" class="small"></p>
+  </div>
+`;
+
+document.body.appendChild(settingsScreen);
+
+// Перемещаем существующие регуляторы, сохраняя их id.
+const originalAudioControls = menuCard.querySelector('.audio');
+
+if (originalAudioControls) {
+  $('audioSettingsHost').appendChild(originalAudioControls);
+}
+
+function refreshSettingsControls() {
+  $('musicVolume').value = comfort.music;
+  $('fxVolume').value = comfort.effects;
+
+  $('sensitivitySetting').value = Math.round(comfort.sensitivity * 100);
+  $('fovSetting').value = comfort.fov;
+  $('motionSetting').value = Math.round(comfort.motion * 100);
+  $('damageSetting').value = Math.round(comfort.damageEffects * 100);
+  $('qualitySetting').value = comfort.quality;
+  $('crosshairSetting').value = comfort.crosshair ? 'on' : 'off';
+
+  $('sensitivityValue').textContent =
+    comfort.sensitivity.toFixed(2) + '×';
+
+  $('fovValue').textContent = comfort.fov + '°';
+  $('motionValue').textContent = Math.round(comfort.motion * 100) + '%';
+  $('damageValue').textContent =
+    Math.round(comfort.damageEffects * 100) + '%';
+}
+
+function applyComfortQuality() {
+  const ratios = {
+    low: .8,
+    medium: 1,
+    high: Math.min(devicePixelRatio, 1.75),
+    auto: Math.min(devicePixelRatio, touchMode ? 1.25 : 1.6)
+  };
+
+  renderer.setPixelRatio(ratios[comfort.quality]);
+}
+
+function applyComfort() {
+  camera.fov = comfort.fov;
+  camera.updateProjectionMatrix();
+
+  $('cross').style.display = comfort.crosshair ? 'block' : 'none';
+
+  $('musicVolume').value = comfort.music;
+  $('fxVolume').value = comfort.effects;
+
+  volumes();
+  saveComfort();
+  refreshSettingsControls();
+}
+
+settingsButton.onclick = () => {
+  refreshSettingsControls();
+  settingsScreen.style.display = 'grid';
+};
+
+$('settingsClose').onclick = () => {
+  settingsScreen.style.display = 'none';
+};
+
+$('settingsReset').onclick = () => {
+  comfort = { ...defaultComfort };
+  applyComfort();
+  applyComfortQuality();
+  $('settingsMessage').textContent = 'Настройки восстановлены.';
+};
+
+$('musicVolume').oninput = event => {
+  comfort.music = Number(event.target.value);
+  volumes();
+  saveComfort();
+};
+
+$('fxVolume').oninput = event => {
+  comfort.effects = Number(event.target.value);
+  volumes();
+  saveComfort();
+};
+
+$('sensitivitySetting').oninput = event => {
+  comfort.sensitivity = Number(event.target.value) / 100;
+  applyComfort();
+};
+
+$('fovSetting').oninput = event => {
+  comfort.fov = Number(event.target.value);
+  applyComfort();
+};
+
+$('motionSetting').oninput = event => {
+  comfort.motion = Number(event.target.value) / 100;
+  applyComfort();
+};
+
+$('damageSetting').oninput = event => {
+  comfort.damageEffects = Number(event.target.value) / 100;
+  applyComfort();
+};
+
+$('crosshairSetting').onchange = event => {
+  comfort.crosshair = event.target.value === 'on';
+  applyComfort();
+};
+
+$('qualitySetting').onchange = event => {
+  comfort.quality = event.target.value;
+  applyComfortQuality();
+  saveComfort();
+};
+
+$('fullscreenButton').onclick = async () => {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else if (document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      throw Error('Недоступно');
+    }
+  } catch {
+    $('settingsMessage').textContent =
+      'Этот браузер не разрешил полный экран. Игра продолжит работать в окне.';
+  }
+};
+
+const baseApplyLook = applyLook;
+
+applyLook = function(dx, dy, sensitivity) {
+  baseApplyLook(dx, dy, sensitivity * comfort.sensitivity);
+};
+
+// ---------- Инструкция ----------
+
+const helpScreen = document.createElement('div');
+helpScreen.id = 'helpScreen';
+helpScreen.className = 'screen';
+helpScreen.innerHTML = `
+  <div class="card">
+    <div class="eyebrow">ПЕРЕД ВЫХОДОМ В КУКУРУЗУ</div>
+    <h2>Как пережить ночь</h2>
+    <ol>
+      <li>Найди <b>два цветка и два гриба</b>. Они подбираются автоматически.</li>
+      <li>Карта раскрывается только там, где ты побывал или осветил проход.</li>
+      <li>Вернись к котлу ◆. Нажми <b>E</b> или кнопку «Котёл».</li>
+      <li>После зелья выбери один из <b>трёх модификаторов</b>.</li>
+      <li>Эффекты сохраняются до конца забега. Пройди пять участков.</li>
+    </ol>
+
+    <p><b>Соломенник:</b> освети и смотри прямо на него.<br>
+    <b>Шорох:</b> не беги без необходимости — он слышит шум.<br>
+    <b>Ночница:</b> держи её в луче фонарика.</p>
+
+    <p><b>Фонарик</b> — пятый слот. Он не расходуется, но требует батареек.
+    <b>Спички</b> дают круговой свет. <b>Колокол</b> останавливает охотников.</p>
+
+    <p class="small">
+      ПК: WASD, мышь, Shift, 1–5, Q, E, F.<br>
+      Большая карта: M или Tab.<br>
+      Телефон: джойстик слева, обзор пальцем справа.
+    </p>
+
+    <button id="helpClose">Понятно</button>
+  </div>
+`;
+
+document.body.appendChild(helpScreen);
+
+helpButton.onclick = () => {
+  helpScreen.style.display = 'grid';
+};
+
+$('helpClose').onclick = () => {
+  helpScreen.style.display = 'none';
+};
+
+// ---------- Полноэкранная карта ----------
+
+const largeMapScreen = document.createElement('div');
+largeMapScreen.id = 'largeMapScreen';
+largeMapScreen.className = 'screen';
+
+largeMapScreen.innerHTML = `
+  <div class="map-layout">
+    <div class="map-header">
+      <div>
+        <div class="eyebrow">ПОЛЕВОЙ ДНЕВНИК</div>
+        <h2 id="largeMapTitle">Изученные тропы</h2>
+      </div>
+      <button id="closeLargeMap">Вернуться</button>
+    </div>
+
+    <div class="map-body">
+      <canvas id="largeMap" width="960" height="960"></canvas>
+    </div>
+
+    <div class="map-footer">
+      <span>◆ Котёл · ● Найденные растения · ▲ Ты<br>
+      Время остановлено, пока карта открыта.</span>
+      <span id="mapSeed"></span>
+    </div>
+  </div>
+`;
+
+document.body.appendChild(largeMapScreen);
+
+$('mapPanel').setAttribute('role', 'button');
+$('mapPanel').setAttribute('aria-label', 'Открыть большую карту');
+$('mapPanel').tabIndex = 0;
+
+function renderLargeMap() {
+  drawMap();
+
+  const canvas = $('largeMap');
+  const context = canvas.getContext('2d');
+
+  context.imageSmoothingEnabled = false;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(
+    $('map'),
+    0, 0,
+    canvas.width, canvas.height
+  );
+
+  const discovered = explored.filter(Boolean).length;
+  const percent = Math.round(discovered / explored.length * 100);
+
+  $('largeMapTitle').textContent =
+    `Участок ${level} · изучено ${percent}%`;
+
+  $('mapSeed').textContent =
+    `Забег: ${runSeed} · участок: ${stageSeed}`;
+}
+
+function openLargeMap() {
+  if (state !== 'playing') return;
+
+  state = 'map';
+  exitMouse();
+  controlsUI();
+
+  renderLargeMap();
+  largeMapScreen.style.display = 'grid';
+}
+
+function closeLargeMap() {
+  if (state !== 'map') return;
+
+  largeMapScreen.style.display = 'none';
+  state = 'playing';
+
+  resetInput();
+  controlsUI();
+  captureMouse();
+}
+
+$('mapPanel').onclick = openLargeMap;
+
+$('mapPanel').onkeydown = event => {
+  if (event.code === 'Enter' || event.code === 'Space') {
+    event.preventDefault();
+    openLargeMap();
+  }
+};
+
+$('closeLargeMap').onclick = closeLargeMap;
+
+document.addEventListener('keydown', event => {
+  if (
+    (event.code === 'KeyM' || event.code === 'Tab') &&
+    (state === 'playing' || state === 'map')
+  ) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    if (event.repeat) return;
+
+    if (state === 'map') closeLargeMap();
+    else openLargeMap();
+
+    return;
+  }
+
+  if (event.code === 'Escape') {
+    if (state === 'map') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      closeLargeMap();
+      return;
+    }
+
+    if (settingsScreen.style.display === 'grid') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      settingsScreen.style.display = 'none';
+      return;
+    }
+
+    if (helpScreen.style.display === 'grid') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      helpScreen.style.display = 'none';
+    }
+  }
+}, true);
+
+window.addEventListener('resize', () => {
+  if (state === 'map') renderLargeMap();
+});
+
+$('controls').textContent =
+  'WASD · Shift — бег · E — котёл · Q — предмет · 1–5 — слот · F — свет · M / Tab — карта · Esc — пауза';
+
+// ---------- Модификаторы ----------
+
+const modifierCatalog = [
+  {
+    id: 'light',
+    name: 'Огонёк',
+    category: 'СВЕТ',
+    description:
+      'Луч становится ярче. Расход батареи делится на 1 + 0,3 × число уровней.',
+    max: 5
+  },
+  {
+    id: 'skin',
+    name: 'Древесная кора',
+    category: 'ЗАЩИТА',
+    description:
+      'Снижает урон пыльцы на 35 процентных пунктов. Максимум — 85%.',
+    max: 3
+  },
+  {
+    id: 'step',
+    name: 'Лёгкий шаг',
+    category: 'ДВИЖЕНИЕ',
+    description:
+      '+8% скорости. Выносливость восстанавливается быстрее, обычные шаги слышны на меньшем расстоянии.',
+    max: 5
+  },
+  {
+    id: 'guard',
+    name: 'Каменное сердце',
+    category: 'ЗАЩИТА',
+    description:
+      'Снижает весь входящий урон на 12% за уровень. Максимум — 48%.',
+    max: 4
+  },
+  {
+    id: 'medicine',
+    name: 'Травник',
+    category: 'ЛЕЧЕНИЕ',
+    description:
+      'Каждый бинт восстанавливает на 15 здоровья больше.',
+    max: 3
+  },
+  {
+    id: 'endurance',
+    name: 'Долгое дыхание',
+    category: 'ВЫНОСЛИВОСТЬ',
+    description:
+      'Бег расходует на 4 единицы выносливости в секунду меньше за уровень.',
+    max: 4
+  },
+  {
+    id: 'match',
+    name: 'Смоляной огонь',
+    category: 'СВЕТ',
+    description:
+      'Каждая спичка горит на 10 секунд дольше.',
+    max: 4
+  },
+  {
+    id: 'bell',
+    name: 'Глубокий звон',
+    category: 'КОНТРОЛЬ',
+    description:
+      'Колокол останавливает врагов на 3 секунды дольше.',
+    max: 4
+  },
+  {
+    id: 'charge',
+    name: 'Запасливость',
+    category: 'РЕСУРСЫ',
+    description:
+      'Каждая батарейка восстанавливает на 10 единиц заряда больше.',
+    max: 3
+  },
+  {
+    id: 'harvest',
+    name: 'Живой урожай',
+    category: 'ЛЕЧЕНИЕ',
+    description:
+      'Подбор каждого ингредиента восстанавливает 7 здоровья за уровень.',
+    max: 4
+  },
+  {
+    id: 'hearth',
+    name: 'Тепло очага',
+    category: 'ВОССТАНОВЛЕНИЕ',
+    description:
+      'После четырёх секунд без урона безопасная поляна лечит на 3 здоровья в секунду быстрее.',
+    max: 4
+  }
+];
+
+function modifierLevel(id) {
+  return Math.max(0, Number(buffs[id]) || 0);
+}
+
+function modifierName(id) {
+  return modifierCatalog.find(modifier => modifier.id === id)?.name || id;
+}
+
+function refreshModifierHUD() {
+  const active = modifierCatalog
+    .filter(modifier => modifierLevel(modifier.id) > 0);
+
+  if (!active.length) {
+    $('buffs').textContent = 'У котла безопасно';
+    return;
+  }
+
+  $('buffs').innerHTML = active.map(modifier =>
+    `${modifier.name} ×${modifierLevel(modifier.id)}`
+  ).join('<br>');
+}
+
+const baseQuestUI = questUI;
+
+questUI = function() {
+  baseQuestUI();
+  refreshModifierHUD();
+};
+
+// Настоящее снижение входящего урона.
+const baseDamage = damage;
+
+damage = function(amount) {
+  const reduction = Math.min(.48, modifierLevel('guard') * .12);
+  baseDamage(amount * (1 - reduction));
+};
+
+// Настоящее усиление расходников.
+const baseFinishItem = finishItem;
+
+finishItem = function(type) {
+  baseFinishItem(type);
+
+  if (type === 0) {
+    const extra = modifierLevel('medicine') * 15;
+    hp = Math.min(100, hp + extra);
+
+    say(
+      `Бинт: до ${45 + extra} здоровья восстановлено.`,
+      3
+    );
+  }
+
+  if (type === 1) {
+    battery = Math.min(
+      100,
+      battery + modifierLevel('charge') * 10
+    );
+
+    say(
+      `Батарейка заменена. Заряд: ${Math.ceil(battery)}%.`,
+      3
+    );
+  }
+
+  if (type === 2) {
+    matchEnd += modifierLevel('match') * 10;
+
+    say(
+      `Спичка горит ${24 + modifierLevel('match') * 10} секунд.`,
+      4
+    );
+  }
+
+  if (type === 3) {
+    freezeEnd += modifierLevel('bell') * 3;
+
+    say(
+      `Звон остановил врагов на ${9 + modifierLevel('bell') * 3} секунд.`,
+      4
+    );
+  }
+
+  inventoryUI();
+};
+
+// Три неповторяющихся варианта, предсказуемых для данного сида.
+function chooseModifiersForStage() {
+  const random = randomGenerator(
+    hash(runSeed + '|potion-choice:' + level)
+  );
+
+  const available = modifierCatalog.filter(modifier =>
+    modifierLevel(modifier.id) < modifier.max
+  );
+
+  for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+
+  return available.slice(0, 3);
+}
+
+offerChoice = function() {
+  state = 'choice';
+  action = null;
+
+  exitMouse();
+  controlsUI();
+
+  $('action').style.display = 'none';
+  $('choicesScreen').style.display = 'grid';
+
+  const chosen = chooseModifiersForStage();
+
+  $('choices').innerHTML = chosen.map(modifier => `
+    <button class="choice" data-modifier="${modifier.id}">
+      <span class="modifier-tag">${modifier.category}</span>
+      <b>${modifier.name}</b>
+      <span>${modifier.description}</span>
+      <span class="modifier-level">
+        ${modifierLevel(modifier.id)
+          ? `Уровень ${modifierLevel(modifier.id)} → ${modifierLevel(modifier.id) + 1}`
+          : 'Новый эффект'}
+      </span>
+    </button>
+  `).join('');
+};
+
+$('choices').onclick = event => {
+  const button = event.target.closest('[data-modifier]');
+
+  if (!button || state !== 'choice') return;
+
+  const id = button.dataset.modifier;
+  const modifier = modifierCatalog.find(entry => entry.id === id);
+
+  if (!modifier) return;
+  if (modifierLevel(id) >= modifier.max) return;
+
+  // Блокируем повторный выбор до перехода.
+  state = 'loading';
+
+  $('choices').querySelectorAll('button').forEach(b => {
+    b.disabled = true;
+  });
+
+  buffs[id] = modifierLevel(id) + 1;
+
+  tone(440, 1.5, .035);
+  tone(660, 2, .025);
+
+  level++;
+  hp = Math.min(100, hp + 30);
+  battery = Math.min(100, battery + 25);
+
+  transition().catch(fatal);
+};
+
+// ---------- Плавное переключение предметов ----------
+
+let shownItem = selected;
+let switchTarget = selected;
+let switchPhase = 'idle';
+let switchTime = 0;
+let switchDrop = 0;
+
+function rebuildHeldItem(type) {
+  held.clear();
+  itemModel(type, held);
+  shownItem = type;
+}
+
+inventoryUI = function() {
+  inventory[FLASHLIGHT] = 1;
+
+  const signature =
+    inventory.join(',') + ':' + selected + ':' +
+    lightOn + ':' + (battery > 0);
+
+  if (signature !== inventorySignature) {
+    inventorySignature = signature;
+
+    $('inventory').innerHTML = itemNames.map((name, index) => {
+      const flashlight = index === FLASHLIGHT;
+
+      const count = flashlight
+        ? (lightOn && battery > 0 ? 'ВКЛ' : 'ВЫКЛ')
+        : inventory[index];
+
+      return `
+        <button
+          class="slot ${selected === index ? 'selected' : ''}
+          ${!flashlight && !inventory[index] ? 'empty' : ''}"
+          data-slot="${index}"
+          aria-label="${name}">
+          <em>${index + 1}</em>
+          <span>${count}</span>
+          <b>${itemIcons[index]}</b>
+          <small>${name}</small>
+        </button>
+      `;
+    }).join('');
+  }
+
+  if (shownItem !== selected && switchPhase === 'idle') {
+    switchTarget = selected;
+    switchPhase = 'down';
+    switchTime = 0;
+
+    noise(.16, .022, 1100);
+  } else if (switchPhase !== 'idle') {
+    switchTarget = selected;
+  }
+};
+
+const baseUseItem = useItem;
+
+useItem = function() {
+  if (switchPhase !== 'idle') {
+    return;
+  }
+
+  baseUseItem();
+};
+
+function updateItemSwitch(dt) {
+  // Убираем старый резкий провал руки при смене слота.
+  handDip = 0;
+
+  if (switchPhase === 'idle') return;
+
+  switchTime += dt;
+
+  if (switchPhase === 'down') {
+    const p = Math.min(1, switchTime / .14);
+    const eased = p * p * (3 - 2 * p);
+
+    switchDrop = eased;
+
+    if (p >= 1) {
+      rebuildHeldItem(switchTarget);
+      switchPhase = 'up';
+      switchTime = 0;
+    }
+  } else {
+    const p = Math.min(1, switchTime / .19);
+    const eased = p * p * (3 - 2 * p);
+
+    switchDrop = 1 - eased;
+
+    if (p >= 1) {
+      switchPhase = 'idle';
+      switchDrop = 0;
+
+      if (shownItem !== selected) {
+        switchTarget = selected;
+        switchPhase = 'down';
+        switchTime = 0;
+      }
+    }
+  }
+
+  hand.position.y -= switchDrop * .3;
+  hand.position.z += switchDrop * .07;
+  hand.rotation.x += switchDrop * .24;
+
+  held.visible = inventory[shownItem] > 0 || shownItem === FLASHLIGHT;
+}
+
+// ---------- Дополнительные анимации врагов ----------
+
+function prepareEnemyAnimation(enemy) {
+  enemy.animation = {
+    lastPosition: enemy.pos.clone(),
+    movement: 0,
+    joints: []
+  };
+
+  enemy.model.children.forEach((object, index) => {
+    if (!object.isMesh) return;
+
+    enemy.animation.joints.push({
+      object,
+      index,
+      position: object.position.clone(),
+      rotation: object.rotation.clone()
+    });
+  });
+}
+
+const baseSpawnEnemy = spawnEnemy;
+
+spawnEnemy = function(type, id) {
+  baseSpawnEnemy(type, id);
+
+  const enemy = enemies[enemies.length - 1];
+  prepareEnemyAnimation(enemy);
+};
+
+function animateEnemies(dt) {
+  for (const enemy of enemies) {
+    if (!enemy.animation) prepareEnemyAnimation(enemy);
+
+    const animation = enemy.animation;
+
+    const distance = enemy.pos.distanceTo(
+      animation.lastPosition
+    );
+
+    animation.lastPosition.copy(enemy.pos);
+
+    const targetMovement = Math.min(
+      1,
+      distance / Math.max(.001, dt * 1.8)
+    );
+
+    animation.movement +=
+      (targetMovement - animation.movement) *
+      (1 - Math.exp(-dt * 10));
+
+    const movement = animation.movement;
+    const frozen = time < freezeEnd;
+    const phase = time + enemy.phase;
+
+    if (enemy.type === 0) {
+      // Соломенник: тяжёлое покачивание плеч и мешка-головы.
+      const sway = frozen
+        ? 0
+        : Math.sin(phase * 5) * .025 * movement;
+
+      enemy.model.rotation.z = sway;
+
+      for (const joint of animation.joints) {
+        joint.object.position.copy(joint.position);
+        joint.object.rotation.copy(joint.rotation);
+
+        if (joint.position.y > 2) {
+          joint.object.rotation.z += sway * .8;
+          joint.object.position.y +=
+            Math.sin(phase * 5 + .7) * .012 * movement;
+        }
+      }
+    }
+
+    if (enemy.type === 1) {
+      // Шорох: попарная работа лап, движение корпуса и ушей.
+      enemy.model.rotation.z = frozen
+        ? 0
+        : Math.sin(phase * 10) * .018 * movement;
+
+      for (const joint of animation.joints) {
+        const object = joint.object;
+
+        object.position.copy(joint.position);
+        object.rotation.copy(joint.rotation);
+
+        const isLeg =
+          joint.position.y < .45 &&
+          Math.abs(joint.position.x) > .25;
+
+        const isEar = joint.position.y > .85;
+
+        if (isLeg && !frozen) {
+          const side =
+            Math.sign(joint.position.x) *
+            Math.sign(joint.position.z);
+
+          object.rotation.x +=
+            Math.sin(phase * 11 + (side > 0 ? 0 : Math.PI)) *
+            .45 * movement;
+
+          object.position.y +=
+            Math.max(
+              0,
+              Math.sin(phase * 11 + (side > 0 ? 0 : Math.PI))
+            ) * .05 * movement;
+        }
+
+        if (isEar && !frozen) {
+          object.rotation.x += Math.sin(phase * 2.1) * .05;
+        }
+      }
+    }
+
+    if (enemy.type === 2) {
+      // Ночница кренится при движении и складывает крылья под звон.
+      enemy.model.rotation.z = frozen
+        ? 0
+        : Math.sin(phase * 2.8) * .09 * movement;
+
+      enemy.model.children.forEach(object => {
+        const side = object.userData.wing;
+        if (!side) return;
+
+        const desired = frozen
+          ? side * .16
+          : Math.sin(phase * (8 + movement * 3)) *
+            (.35 + movement * .15) * side;
+
+        object.rotation.y +=
+          (desired - object.rotation.y) *
+          (1 - Math.exp(-dt * 22));
+      });
+    }
+  }
+}
+
+// ---------- Подключение модификаторов к игровому циклу ----------
+
+const baseUpdate = update;
+
+update = function(dt) {
+  const oldX = player.x;
+  const oldZ = player.z;
+  const ingredientsBefore = found.filter(Boolean).length;
+
+  const wasRunning =
+    (keys.ShiftLeft || keys.ShiftRight || touchSprint) &&
+    !exhausted &&
+    !action;
+
+  // Старый handDip не должен создавать резкий скачок.
+  handDip = 0;
+
+  baseUpdate(dt);
+
+  if (state !== 'playing') return;
+
+  const moved =
+    Math.hypot(player.x - oldX, player.z - oldZ) > .0001;
+
+  // Долгое дыхание: компенсируем часть реального расхода при беге.
+  if (wasRunning && moved) {
+    energy = Math.min(
+      100,
+      energy + modifierLevel('endurance') * 4 * dt
+    );
+  }
+
+  // Тепло очага: дополнительная регенерация только в безопасности.
+  if (central(cellId(player)) && time - lastDamage > 4) {
+    hp = Math.min(
+      100,
+      hp + modifierLevel('hearth') * 3 * dt
+    );
+  }
+
+  // Живой урожай: лечение только за новые ингредиенты.
+  const gainedIngredients =
+    found.filter(Boolean).length - ingredientsBefore;
+
+  if (gainedIngredients > 0) {
+    const healing =
+      gainedIngredients * modifierLevel('harvest') * 7;
+
+    if (healing > 0) {
+      hp = Math.min(100, hp + healing);
+      tone(740, .8, .022);
+    }
+  }
+
+  // Удобство: регулируем покачивание, не меняя yaw/pitch.
+  camera.position.y =
+    1.65 + (camera.position.y - 1.65) * comfort.motion;
+
+  camera.rotation.z *= comfort.damageEffects;
+
+  $('damage').style.opacity =
+    damageFlash * .75 * comfort.damageEffects;
+
+  // Обновляем руку после базового игрового цикла.
+  updateItemSwitch(dt);
+  animateEnemies(dt);
+
+  // Значения после дополнительных эффектов.
+  $('hpbar').style.width = hp + '%';
+  $('hpText').textContent = Math.ceil(hp);
+  $('energybar').style.width = energy + '%';
+
+  // Для ручного качества не даём автоматическому снижению
+  // разрешения навсегда изменить выбранную настройку.
+  if (comfort.quality !== 'auto') {
+    const desired = {
+      low: .8,
+      medium: 1,
+      high: Math.min(devicePixelRatio, 1.75)
+    }[comfort.quality];
+
+    if (Math.abs(renderer.getPixelRatio() - desired) > .01) {
+      renderer.setPixelRatio(desired);
+    }
+  }
+};
+
+// ---------- Корректный старт участка ----------
+
+const baseBuildLevel = buildLevel;
+
+buildLevel = function() {
+  switchPhase = 'idle';
+  switchTime = 0;
+  switchDrop = 0;
+  handDip = 0;
+
+  baseBuildLevel();
+
+  // Создаём предмет сразу только при загрузке участка.
+  shownItem = selected;
+  switchTarget = selected;
+  rebuildHeldItem(selected);
+
+  refreshModifierHUD();
+
+  camera.fov = comfort.fov;
+  camera.updateProjectionMatrix();
+
+  applyComfortQuality();
+};
+
+// Не оставляем вторичные окна открытыми при новом старте.
+const baseStartHandler = $('start').onclick;
+
+$('start').onclick = function(event) {
+  settingsScreen.style.display = 'none';
+  helpScreen.style.display = 'none';
+  largeMapScreen.style.display = 'none';
+
+  baseStartHandler.call(this, event);
+};
+
+// ---------- Стартовые настройки ----------
+
+refreshSettingsControls();
+applyComfort();
+applyComfortQuality();
+
+shownItem = selected;
+switchTarget = selected;
+rebuildHeldItem(selected);
+
+$('status').textContent =
+  'Готово. Настройки сохраняются в браузере. Карта: M, Tab или касание миникарты.';
+ 
  $('start').disabled = false;
 $('start').textContent = 'Начать забег';
 $('start').disabled = false;
